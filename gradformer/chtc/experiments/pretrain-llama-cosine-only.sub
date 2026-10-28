@@ -12,7 +12,8 @@ output = ../logs/pretrain-llama-cosine-only.$(Cluster).out
 error = ../logs/pretrain-llama-cosine-only.$(Cluster).err
 requirements = (HasCHTCStaging == true)
 request_gpus = 1
-require_gpus = (DeviceName == "NVIDIA H200")
+gpus_minimum_memory = 10000M
+gpus_minimum_capability = 8.0
 request_cpus = 2
 request_memory = 16GB
 request_disk = 15GB
