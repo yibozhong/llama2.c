@@ -6,6 +6,7 @@ from typing import Any, Optional, Tuple
 
 import numpy as np
 import torch
+from gradformer.core import initialize_steps, reset_steps, hidden_step
 import torch.nn.functional as F
 from torch import nn
 
@@ -22,6 +23,12 @@ class ModelArgs:
     norm_eps: float = 1e-5
     max_seq_len: int = 2048
     dropout: float = 0.0
+    hidden_update: str = "baseline"
+    hidden_step_size: float = 0.01
+    hidden_beta1: float = 0.9
+    hidden_beta2: float = 0.999
+    hidden_eps: float = 0.01
+
 
 
 class RMSNorm(torch.nn.Module):
@@ -197,10 +204,11 @@ class TransformerBlock(nn.Module):
         self.attention_norm = RMSNorm(args.dim, eps=args.norm_eps)
         self.ffn_norm = RMSNorm(args.dim, eps=args.norm_eps)
 
-    def forward(self, x, freqs_cos, freqs_sin):
-        h = x + self.attention.forward(self.attention_norm(x), freqs_cos, freqs_sin)
-        out = h + self.feed_forward.forward(self.ffn_norm(h))
-        return out
+    def forward(self, x, freqs_cos, freqs_sin, return_delta=False):
+        attention = self.attention(self.attention_norm(x), freqs_cos, freqs_sin)
+        h = x + attention
+        mlp = self.feed_forward(self.ffn_norm(h))
+        return attention + mlp if return_delta else h + mlp
 
 
 class Transformer(nn.Module):
@@ -209,6 +217,7 @@ class Transformer(nn.Module):
     def __init__(self, params: ModelArgs):
         super().__init__()
         self.params = params
+        initialize_steps(self, params, params.n_layers)
         self.vocab_size = params.vocab_size
         self.n_layers = params.n_layers
 
@@ -246,15 +255,23 @@ class Transformer(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, tokens: torch.Tensor, targets: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, tokens: torch.Tensor, targets: Optional[torch.Tensor] = None, capture_gradients=False, return_loss=False) -> torch.Tensor:
         _bsz, seqlen = tokens.shape
         h = self.tok_embeddings(tokens)
         h = self.dropout(h)
         freqs_cos = self.freqs_cos[:seqlen]
         freqs_sin = self.freqs_sin[:seqlen]
 
-        for layer in self.layers:
-            h = layer(h, freqs_cos, freqs_sin)
+        h_inputs, predictions, adam_state = [], [], None
+        for i, layer in enumerate(self.layers):
+            if self.params.hidden_update == "baseline":
+                h = layer(h, freqs_cos, freqs_sin)
+            else:
+                predicted = -layer(h, freqs_cos, freqs_sin, return_delta=True)
+                if capture_gradients:
+                    h_inputs.append(h)
+                    predictions.append(predicted)
+                h, adam_state = hidden_step(h, predicted, self.hidden_step_raw[i], adam_state, i, self.params)
         h = self.norm(h)
 
         if targets is not None:
@@ -266,7 +283,13 @@ class Transformer(nn.Module):
             logits = self.output(h[:, [-1], :]) # note: using list [-1] to preserve the time dim
             self.last_loss = None
 
-        return logits
+        if return_loss:
+            if targets is None:
+                raise ValueError("return_loss requires targets")
+            value = self.last_loss
+        else:
+            value = logits
+        return (value, h_inputs, predictions) if capture_gradients else value
 
     def configure_optimizers(self, weight_decay, learning_rate, betas, device_type):
         # start with all of the candidate parameters
