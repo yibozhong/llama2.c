@@ -1,0 +1,9 @@
+0.01 0.0005 center-e2e e2e no
+0.001 5e-05 e2e-eta0.001-lr5e-05 e2e no
+0.001 0.0005 e2e-eta0.001-lr0.0005 e2e no
+0.001 0.005 e2e-eta0.001-lr0.005 e2e no
+0.01 5e-05 e2e-eta0.01-lr5e-05 e2e no
+0.01 0.005 e2e-eta0.01-lr0.005 e2e no
+0.1 5e-05 e2e-eta0.1-lr5e-05 e2e no
+0.1 0.0005 e2e-eta0.1-lr0.0005 e2e no
+0.1 0.005 e2e-eta0.1-lr0.005 e2e no

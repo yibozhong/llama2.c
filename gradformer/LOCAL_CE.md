@@ -123,9 +123,9 @@ using exactly the same hidden SGD forward, full-token CCE and independent
 per-block clipping, with no hidden detaches and only final CE. Final CE retains
 coefficient 1/depth in both objectives, matching the direct head gradient scale.
 End-to-end runs do not label their training losses as per-layer local CE. The
-same all-layer validation diagnostic evaluates both objectives. This control
-will be run near the promising LR region after the initial local grid, allowing
-the effect of local training to be compared without changing the hidden update
-or CE implementation. It is distinct from historical end-to-end runs with
+same all-layer validation diagnostic evaluates both objectives. The matched end-to-end grid in `local-lr-e2e.tsv` uses all nine of the same
+LR pairs, submitted concurrently with the local grid. Both objectives therefore
+have the same initial tuning budget, allowing the effect of local training to
+be compared without changing the hidden update or CE implementation. It is distinct from historical end-to-end runs with
 native CE and global clipping. A finite single-seed, 1000-step sweep cannot prove
 that all learning-rate or convergence effects have been excluded.
