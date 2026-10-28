@@ -124,5 +124,27 @@ energy50-step process restart included and job-level setup/checks excluded.
 Thus this SGD center has an8.5% training-time overhead and worse CE at equal
 tokens; no quality/compute benefit is demonstrated. SGD eta.001 also finished
 with CE2.778312 on L40 (pl1ojunt); its GPU seconds are not comparable to the
-Blackwell baseline. Other six sweep configurations are running or queued;
-do not call the sweep complete or generalize the result to every energy design.
+Blackwell baseline. All remaining configurations subsequently completed; see final results below.
+
+
+## Completed pilot sweep
+
+All8 jobs exited0 and all9 training runs completed1000 steps /32,768,000 tokens. Source/config/data/seed/LR schedules/token counts/finite metrics/saved-checkpoint status and finished W&B final metrics were cross-checked. Full workspace metadata audit: ../../reports/energy-final-audit.json. The50-step resume CE check used1e-6 tolerance:one Adam run differed by4.768e-7 (one FP32 ULP), all others were identical. The independent allocated-GPU next-update restoration test was exact.
+
+| Hidden update | Initial eta | Parameter LR | Validation CE | GPU | Run |
+| --- | ---: | ---: | ---: | --- | --- |
+| baseline | none | 0.0005 | 1.793137 | RTX PRO 6000 Blackwell Server Edition | [iyh6yugm](https://wandb.ai/yibozhong657-none/nanochat/runs/iyh6yugm) |
+| sgd | 0.001 | 0.0005 | 2.778312 | L40 | [pl1ojunt](https://wandb.ai/yibozhong657-none/nanochat/runs/pl1ojunt) |
+| sgd | 0.01 | 0.0005 | 2.335076 | RTX PRO 6000 Blackwell Server Edition | [qgo28ibv](https://wandb.ai/yibozhong657-none/nanochat/runs/qgo28ibv) |
+| sgd | 0.1 | 0.0005 | 2.071961 | L40S | [broi1s0i](https://wandb.ai/yibozhong657-none/nanochat/runs/broi1s0i) |
+| sgd | 0.01 | 5e-05 | 3.771230 | RTX PRO 6000 Blackwell Server Edition | [07wgt8qa](https://wandb.ai/yibozhong657-none/nanochat/runs/07wgt8qa) |
+| sgd | 0.01 | 0.005 | 1.959035 | L40 | [vhnzpfdz](https://wandb.ai/yibozhong657-none/nanochat/runs/vhnzpfdz) |
+| adam | 0.001 | 0.0005 | 4.031477 | L40 | [z2re9vqq](https://wandb.ai/yibozhong657-none/nanochat/runs/z2re9vqq) |
+| adam | 0.01 | 0.0005 | 2.171038 | L40S | [jlt1qn3r](https://wandb.ai/yibozhong657-none/nanochat/runs/jlt1qn3r) |
+| adam | 0.1 | 0.0005 | 2.082594 | RTX PRO 6000 Blackwell Server Edition | [yhh39a5z](https://wandb.ai/yibozhong657-none/nanochat/runs/yhh39a5z) |
+
+Best tested energy is SGD, initial eta.01, parameter LR.005, CE1.959035. Ordinary Transformer CE1.793137 remains better by.165898 at equal tokens. Increasing SGD parameter LR from.0005 to.005 improved CE2.335076 to1.959035; increasing eta from.01 to.1 at LR.0005 improved CE to2.071961. Best Adam of the three eta points is2.082594. All runs' validation CE continued decreasing through1000 steps.
+
+Settings clearly matter. Both SGD learning-rate/eta directions favor the tested upper boundary; the combination eta.1/LR.005 was not tested. Adam parameter LR was fixed at.0005. Thus this grid does not exhaust LR effects or establish a general optimizer ranking. It also has no demonstrated quality/compute advantage over the ordinary Transformer. The best energy ran on L40, so its109.386 seconds must not be directly compared with the Blackwell baseline's75.251 seconds. The matched center/standard pair remains the valid direct wall-time comparison (81.642 versus75.251 training seconds).
+
+No energy jobs remain running or queued. No extra sweep or longer training has been submitted. The unrelated old8-GPU job7310803 remains idle.
