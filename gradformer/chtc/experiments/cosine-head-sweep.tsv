@@ -1,0 +1,7 @@
+0.01 0.00005 lr-low cosine-head ntp no
+0.01 0.005 lr-high cosine-head ntp no
+0.001 0.0005 eta-low cosine-head ntp no
+0.1 0.0005 eta-high cosine-head ntp no
+0.01 0.0005 head-only-fixed-last-eta cosine-head fixed no
+0.01 0.0005 pure-cosine-control cosine-only fixed no
+0.01 0.0005 ntp-only-control ntp-only ntp no

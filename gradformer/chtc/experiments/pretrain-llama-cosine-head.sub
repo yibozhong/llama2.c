@@ -1,0 +1,23 @@
+universe = vanilla
+container_image = file:///staging/y/yzhong239/gradformer/llama2-uv-v4.sif
+executable = pretrain-llama-cosine-head.sh
+arguments = $(eta) $(lr) $(label) $(mode) $(last_eta) $(checks)
+transfer_input_files = ../bundles/llama2-cosine-head-v1.tar.gz,../bundles/dataset-v1.tar,/home/yzhong239/.netrc
+encrypt_input_files = /home/yzhong239/.netrc
+transfer_output_files = results.tar
+transfer_output_remaps = "results.tar=../results/pretrain-llama-cosine-head-$(Cluster).$(Process).tar"
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+log = ../logs/pretrain-llama-cosine-head.$(Cluster).$(Process).log
+output = ../logs/pretrain-llama-cosine-head.$(Cluster).$(Process).out
+error = ../logs/pretrain-llama-cosine-head.$(Cluster).$(Process).err
+requirements = (HasCHTCStaging == true)
+request_gpus = 1
+gpus_minimum_memory = 10000M
+gpus_minimum_capability = 8.0
+request_cpus = 2
+request_memory = 6GB
+request_disk = 15GB
++WantGPULab = true
++GPUJobLength = "short"
+queue eta,lr,label,mode,last_eta,checks from $(trials)
