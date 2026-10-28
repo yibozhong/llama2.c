@@ -59,3 +59,40 @@ the CE change induced by the forward hidden update under the same head, and
 the fraction of tokens whose CE improved. These are task-effect metrics, not
 gradient-prediction cosine. Inference runs the original hidden-Adam forward
 and evaluates only the final head; no labels or backward passes are needed.
+
+## SGD with final-layer readout training
+
+The next independent pilot runs `train_local --update sgd --readout-training final`.
+Hidden updates use `h_next = h - softplus(raw_eta) * prediction`, without moments.
+Initial eta remains 0.01 and is learnable; parameter AdamW remains lr=0.0005,
+with the same warmup and 200M-token schedule. All layer losses retain coefficient
+1/6. This fixed configuration is a reference before learning-rate tuning.
+
+Intermediate losses detach the readout matrix and RMSNorm weight, while retaining
+the readout derivative with respect to hidden. Each block and its eta therefore
+still train on their own full-token CE. Only the final-layer CE trains the direct
+readout branches. Embedding/head tying is retained, so the shared matrix ALSO
+receives the first-layer CE gradient through the input embedding; it is not a
+matrix trained exclusively by the final loss. Final RMSNorm has no such input
+path and receives only the final-layer loss gradient.
+
+`check_local_sgd` checks these routes, an independent SGD-gradient reference at
+accumulation 1/3/8, dense/CCE gradients, unchanged forward values and block gradients
+when readout parameters are detached, recovery, and validation side effects.
+`benchmark_local --sgd-final` compares end-to-end hidden SGD with CCE, the previous
+local hidden Adam with CCE, local SGD with all-layer readout gradients, and local
+SGD with final-layer readout gradients, on one GPU with identical macrostep sizes.
+These are cost measurements; only the last case receives a new training pilot.
+The matching CHTC launcher is `chtc/experiments/pretrain-llama-local-sgd.sub`.
+
+Validation additionally records prediction RMS, actual hidden-update RMS, and
+update RMS divided by incoming-hidden RMS at each layer. Metrics average the
+per-microbatch RMS values. These help distinguish small update magnitudes from
+poor update directions without changing the optimization objective.
+
+Future learning-rate exploration should start with a small order-of-magnitude
+sweep, then narrow the range. Distinguish the hidden initial eta from parameter
+AdamW learning rate, use plausible ranges for each, and preserve the seed, data,
+token budget, and validation protocol across trials. Each trial has its own W&B
+run; the user's examples 0.001/0.01/0.1 describe the spacing, not mandatory values
+for every optimizer.

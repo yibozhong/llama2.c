@@ -1,4 +1,4 @@
-"""Single-GPU strict-local CE pilot, all tokens, shared head, hidden Adam."""
+"""Single-GPU strict-local CE pilot, all tokens, shared head, hidden Adam/SGD."""
 import argparse
 from dataclasses import asdict
 import json
@@ -22,6 +22,8 @@ def main():
     parser.add_argument("--tokens", type=int, default=200000000)
     parser.add_argument("--stop-after-step", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument("--update", choices=["adam", "sgd"], default="adam")
+    parser.add_argument("--readout-training", choices=["all", "final"], default="all")
     parser.add_argument("--eval-every", type=int, default=250)
     parser.add_argument("--eval-batches", type=int, default=32)
     parser.add_argument("--save-every", type=int, default=250)
@@ -36,7 +38,7 @@ def main():
     manifest = json.loads((Path(args.data) / "manifest.json").read_text())
     train = np.memmap(Path(args.data) / "train.bin", dtype=np.uint16, mode="r")
     val = np.memmap(Path(args.data) / "val.bin", dtype=np.uint16, mode="r")
-    model = construct("llama2", "adam", depth=6, width=288, heads=6,
+    model = construct("llama2", args.update, depth=6, width=288, heads=6,
                       vocab=manifest["vocab_size"], sequence=256, step_size=.01, device=device)
     optimizer = optimizer_for(model, "llama2", 32768)
     steps = math.ceil(args.tokens / 32768)
@@ -46,8 +48,11 @@ def main():
               "parameters": sum(p.numel() for p in model.parameters()), "gpu": torch.cuda.get_device_name(),
               "torch": torch.__version__, "batch": 16, "sequence": 256, "batch_tokens": 32768,
               "accumulation": 8, "schedule_steps": steps, "objective": "mean of all-layer all-token local CE",
-              "hidden_update": "adam", "gradient_boundary": "hidden AND moments detached between blocks",
-              "readout": "shared tied embedding/head and shared final RMSNorm; all-layer gradients",
+              "hidden_update": args.update, "gradient_boundary": "hidden AND any moments detached between blocks",
+              "readout_training": args.readout_training,
+              "readout": "shared tied embedding/head and final RMSNorm; " + ("final-layer readout gradients only" if args.readout_training == "final" else "all-layer readout gradients"),
+              "tied_embedding_input_gradient": "first-layer local CE, independently of readout gradient policy",
+              "local_ce_coefficient": 1 / len(model.layers),
               "clipping": "max_norm=1 independently per block+its eta, and separately shared head/norm",
               "ce_implementation": "CCE full vocabulary; no filtering; fp32 gradient accumulation",
               "cce_commit": "3de376c106a1916bc5e1b619f9c77c87a461ee1c",
@@ -59,6 +64,8 @@ def main():
         for key in ("seed", "dataset", "model", "batch_tokens", "objective", "clipping", "ce_implementation", "cce_commit", "schedule_steps", "source"):
             if previous[key] != config[key]:
                 raise ValueError(f"Cannot change {key} on local-CE resume")
+        if previous.get("readout_training", "all") != args.readout_training:
+            raise ValueError("Cannot change readout gradient policy on resume")
         latest = json.loads(latest_path.read_text()); folder = out / latest["directory"]
         model.load_state_dict(torch.load(folder / "model.pt", map_location=device, weights_only=False))
         state = torch.load(folder / "rank-0.pt", map_location=device, weights_only=False)
@@ -73,8 +80,8 @@ def main():
     (out / "wandb-id.txt").write_text(run_id)
     (out / "config.json").write_text(json.dumps(config, indent=2))
     run = wandb.init(project="nanochat", entity="yibozhong657-none", id=run_id, resume="allow",
-                     name=f"gradformer-llama2-local-ce-all-tokens-adam-seed{args.seed}",
-                     group="gradformer-llama2-200000000tokens", tags=["strict-local", "all-tokens", "shared-head", "hidden-adam", "cce"],
+                     name=f"gradformer-llama2-local-ce-all-tokens-{args.update}-{args.readout_training}-readout-seed{args.seed}",
+                     group="gradformer-llama2-200000000tokens", tags=["strict-local", "all-tokens", "shared-head", "hidden-" + args.update, args.readout_training + "-readout", "cce"],
                      job_type="pretrain", config=config)
     run.define_metric("step"); run.define_metric("*", step_metric="step")
     handle = (out / "metrics.jsonl").open("a")
@@ -119,7 +126,7 @@ def main():
             losses = []
             for _ in range(8):
                 x, y = batch(train, rng, 16, 256, device)
-                losses.append(local_backward(model, x, y, accumulation=8))
+                losses.append(local_backward(model, x, y, accumulation=8, readout_training=args.readout_training))
             layer_norms, shared_norm = clip_local_gradients(model)
             optimizer.step()
             torch.cuda.synchronize(); duration = time.perf_counter() - begin
