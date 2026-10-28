@@ -15,8 +15,8 @@ requirements = (HasCHTCStaging == true)
 request_gpus = 1
 gpus_minimum_memory = 10000M
 gpus_minimum_capability = 8.0
-request_cpus = 4
-request_memory = 16GB
+request_cpus = 2
+request_memory = 6GB
 request_disk = 20GB
 +WantGPULab = true
 +GPUJobLength = "short"
