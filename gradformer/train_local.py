@@ -10,9 +10,25 @@ import time
 import numpy as np
 import torch
 
-from gradformer.local_ce import local_backward, clip_local_gradients, validation_metrics
+from gradformer.local_ce import local_backward, end_to_end_backward, clip_local_gradients, validation_metrics
 from gradformer.runtime import construct, optimizer_for
 from gradformer.train import atomic_save, batch
+
+
+def configure_parameter_lr(optimizer, learning_rate):
+    if not math.isfinite(learning_rate) or learning_rate <= 0:
+        raise ValueError("Parameter learning rate must be finite and positive")
+    for group in optimizer.param_groups:
+        group["lr"] = group["initial_lr"] = learning_rate
+
+
+def validate_resume(previous, config):
+    for key in ("seed", "dataset", "model", "batch_tokens", "objective", "clipping", "ce_implementation", "cce_commit", "schedule_steps", "source"):
+        if previous[key] != config[key]:
+            raise ValueError(f"Cannot change {key} on local-CE resume")
+    for key, default in (("readout_training", "all"), ("parameter_lr", .0005), ("training_objective", "local")):
+        if previous.get(key, default) != config[key]:
+            raise ValueError(f"Cannot change {key} on resume")
 
 
 def main():
@@ -24,11 +40,20 @@ def main():
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--update", choices=["adam", "sgd"], default="adam")
     parser.add_argument("--readout-training", choices=["all", "final"], default="all")
+    parser.add_argument("--hidden-step-size", type=float, default=.01)
+    parser.add_argument("--parameter-lr", type=float, default=.0005)
+    parser.add_argument("--training-objective", choices=["local", "e2e"], default="local")
+    parser.add_argument("--run-group", default="gradformer-llama2-200000000tokens")
+    parser.add_argument("--run-label", default="")
     parser.add_argument("--eval-every", type=int, default=250)
     parser.add_argument("--eval-batches", type=int, default=32)
     parser.add_argument("--save-every", type=int, default=250)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
+    if not all(math.isfinite(v) and v > 0 for v in (args.hidden_step_size, args.parameter_lr)):
+        parser.error("Hidden step size and parameter LR must be finite and positive")
+    if args.training_objective == "e2e" and args.readout_training != "final":
+        parser.error("The matched end-to-end control uses final readout training")
     if int(os.environ.get("WORLD_SIZE", 1)) != 1:
         parser.error("This strict-local pilot supports one GPU")
     torch.cuda.set_device(0)
@@ -39,20 +64,24 @@ def main():
     train = np.memmap(Path(args.data) / "train.bin", dtype=np.uint16, mode="r")
     val = np.memmap(Path(args.data) / "val.bin", dtype=np.uint16, mode="r")
     model = construct("llama2", args.update, depth=6, width=288, heads=6,
-                      vocab=manifest["vocab_size"], sequence=256, step_size=.01, device=device)
+                      vocab=manifest["vocab_size"], sequence=256, step_size=args.hidden_step_size, device=device)
     optimizer = optimizer_for(model, "llama2", 32768)
+    configure_parameter_lr(optimizer, args.parameter_lr)
     steps = math.ceil(args.tokens / 32768)
     out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
     source = json.loads(Path("gradformer/source.json").read_text())
     config = {**vars(args), "source": source, "dataset": manifest, "model": asdict(model.params),
               "parameters": sum(p.numel() for p in model.parameters()), "gpu": torch.cuda.get_device_name(),
               "torch": torch.__version__, "batch": 16, "sequence": 256, "batch_tokens": 32768,
-              "accumulation": 8, "schedule_steps": steps, "objective": "mean of all-layer all-token local CE",
-              "hidden_update": args.update, "gradient_boundary": "hidden AND any moments detached between blocks",
+              "accumulation": 8, "schedule_steps": steps,
+              "objective": ("mean of all-layer all-token local CE" if args.training_objective == "local" else "final all-token CE divided by depth; connected hidden path"),
+              "hidden_update": args.update,
+              "gradient_boundary": ("hidden AND any moments detached between blocks" if args.training_objective == "local" else "connected through all hidden updates"),
               "readout_training": args.readout_training,
               "readout": "shared tied embedding/head and final RMSNorm; " + ("final-layer readout gradients only" if args.readout_training == "final" else "all-layer readout gradients"),
-              "tied_embedding_input_gradient": "first-layer local CE, independently of readout gradient policy",
-              "local_ce_coefficient": 1 / len(model.layers),
+              "tied_embedding_input_gradient": ("first-layer local CE, independently of readout gradient policy" if args.training_objective == "local" else "final CE through all blocks"),
+              "local_ce_coefficient": 1 / len(model.layers) if args.training_objective == "local" else None,
+              "final_ce_coefficient": 1 / len(model.layers),
               "clipping": "max_norm=1 independently per block+its eta, and separately shared head/norm",
               "ce_implementation": "CCE full vocabulary; no filtering; fp32 gradient accumulation",
               "cce_commit": "3de376c106a1916bc5e1b619f9c77c87a461ee1c",
@@ -61,11 +90,7 @@ def main():
     latest_path = out / "latest.json"
     if args.resume:
         previous = json.loads((out / "config.json").read_text())
-        for key in ("seed", "dataset", "model", "batch_tokens", "objective", "clipping", "ce_implementation", "cce_commit", "schedule_steps", "source"):
-            if previous[key] != config[key]:
-                raise ValueError(f"Cannot change {key} on local-CE resume")
-        if previous.get("readout_training", "all") != args.readout_training:
-            raise ValueError("Cannot change readout gradient policy on resume")
+        validate_resume(previous, config)
         latest = json.loads(latest_path.read_text()); folder = out / latest["directory"]
         model.load_state_dict(torch.load(folder / "model.pt", map_location=device, weights_only=False))
         state = torch.load(folder / "rank-0.pt", map_location=device, weights_only=False)
@@ -80,8 +105,8 @@ def main():
     (out / "wandb-id.txt").write_text(run_id)
     (out / "config.json").write_text(json.dumps(config, indent=2))
     run = wandb.init(project="nanochat", entity="yibozhong657-none", id=run_id, resume="allow",
-                     name=f"gradformer-llama2-local-ce-all-tokens-{args.update}-{args.readout_training}-readout-seed{args.seed}",
-                     group="gradformer-llama2-200000000tokens", tags=["strict-local", "all-tokens", "shared-head", "hidden-" + args.update, args.readout_training + "-readout", "cce"],
+                     name=f"gradformer-{args.training_objective}-{args.update}-{args.readout_training}-eta{args.hidden_step_size:g}-lr{args.parameter_lr:g}-seed{args.seed}" + ("-" + args.run_label if args.run_label else ""),
+                     group=args.run_group, tags=["strict-local" if args.training_objective == "local" else "matched-e2e", "all-tokens", "shared-head", "hidden-" + args.update, args.readout_training + "-readout", "cce"],
                      job_type="pretrain", config=config)
     run.define_metric("step"); run.define_metric("*", step_metric="step")
     handle = (out / "metrics.jsonl").open("a")
@@ -126,7 +151,10 @@ def main():
             losses = []
             for _ in range(8):
                 x, y = batch(train, rng, 16, 256, device)
-                losses.append(local_backward(model, x, y, accumulation=8, readout_training=args.readout_training))
+                if args.training_objective == "local":
+                    losses.append(local_backward(model, x, y, accumulation=8, readout_training=args.readout_training))
+                else:
+                    losses.append(end_to_end_backward(model, x, y, accumulation=8))
             layer_norms, shared_norm = clip_local_gradients(model)
             optimizer.step()
             torch.cuda.synchronize(); duration = time.perf_counter() - begin
@@ -136,14 +164,17 @@ def main():
                 raise RuntimeError("Nonfinite local CE")
             if step == start or (step + 1) % 10 == 0:
                 row = dict(step=step + 1, tokens=(step + 1) * 32768, train_ce=losses[-1].item(),
-                           train_local_ce=losses.mean().item(), step_seconds=duration,
+                           parameter_lr=optimizer.param_groups[0]["lr"], step_seconds=duration,
                            training_seconds=training_seconds, tokens_per_second=32768 / duration,
                            peak_memory_gb=torch.cuda.max_memory_allocated() / 2**30,
                            shared_gradient_norm=shared_norm.item())
+                prefix = "local" if args.training_objective == "local" else "block"
+                if args.training_objective == "local":
+                    row["train_local_ce"] = losses.mean().item()
+                    row.update({f"local/layer_{i}/ce": losses[i].item() for i in range(6)})
                 for i in range(6):
-                    row.update({f"local/layer_{i}/ce": losses[i].item(),
-                                f"local/layer_{i}/gradient_norm": layer_norms[i].item(),
-                                f"local/layer_{i}/step_size": torch.nn.functional.softplus(model.hidden_step_raw[i]).item()})
+                    row.update({f"{prefix}/layer_{i}/gradient_norm": layer_norms[i].item(),
+                                f"{prefix}/layer_{i}/step_size": torch.nn.functional.softplus(model.hidden_step_raw[i]).item()})
                 emit(row)
             if (step + 1) % args.eval_every == 0 or step + 1 == endpoint:
                 value = evaluate(step + 1)

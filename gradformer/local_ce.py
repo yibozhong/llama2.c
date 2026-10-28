@@ -79,6 +79,23 @@ def local_backward(model, x, y, *, accumulation=1, implementation="cce", amp=Tru
     return torch.stack(values)
 
 
+def end_to_end_backward(model, x, y, *, accumulation=1, implementation="cce", amp=True):
+    """Matched control: final CE, connected hidden path, same 1/depth coefficient.
+
+    Matches local training's final-head loss scale and uses the same independent
+    gradient clipping in the caller. No intermediate classifiers are evaluated.
+    """
+    with amp_context(model, amp):
+        h, state = model.tok_embeddings(x), None
+        cos, sin = model.freqs_cos[:x.size(1)], model.freqs_sin[:x.size(1)]
+        for layer, block in enumerate(model.layers):
+            predicted = -block(h, cos, sin, return_delta=True)
+            h, state = hidden_step(h, predicted, model.hidden_step_raw[layer], state, layer, model.params)
+        loss = readout_loss(model, h, y, implementation)
+    (loss / (len(model.layers) * accumulation)).backward()
+    return loss.detach().reshape(1)
+
+
 @torch.no_grad()
 def clip_local_gradients(model, max_norm=1.):
     """Independent clipping: no other block's gradient changes this block's scale."""

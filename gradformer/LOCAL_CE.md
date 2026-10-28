@@ -96,3 +96,36 @@ AdamW learning rate, use plausible ranges for each, and preserve the seed, data,
 token budget, and validation protocol across trials. Each trial has its own W&B
 run; the user's examples 0.001/0.01/0.1 describe the spacing, not mandatory values
 for every optimizer.
+
+## Learning-rate sweep and matched training control
+
+`train_local` exposes `--hidden-step-size` (learnable initial eta) and
+`--parameter-lr` (peak LR for every AdamW parameter group, including eta).
+Defaults remain 0.01 and 0.0005. Resume rejects changes to either setting or
+the training objective. Actual scheduled parameter LR is logged every ten steps.
+
+The first grid crosses eta 0.001/0.01/0.1 with parameter LR
+0.00005/0.0005/0.005, including a repeat of the center point. All nine independent
+single-GPU jobs are submitted together, as requested by the user. Each checks
+the controls and connected-gradient implementation on GPU, then trains 50 steps
+and resumes its own checkpoint to 1000 steps. Every run has the same seed, data,
+200M schedule horizon, batch and validation protocol. Only finite-value failures
+stop a candidate; a poor early CE alone does not prune it. W&B group is
+`gradformer-local-sgd-lr-sweep-20261028`.
+
+Submit from the cluster directory using `condor_submit pretrain-llama-local-lr.sub
+trials=local-lr-grid.tsv`. The immutable code bundle is `llama2-local-lr-v1.tar.gz`.
+Each output archive includes the cluster and process IDs. Budget approximately
+0.4 GiB output per candidate; preserve checkpoints for follow-up comparisons.
+
+`--training-objective e2e --readout-training final` enables a diagnostic control
+using exactly the same hidden SGD forward, full-token CCE and independent
+per-block clipping, with no hidden detaches and only final CE. Final CE retains
+coefficient 1/depth in both objectives, matching the direct head gradient scale.
+End-to-end runs do not label their training losses as per-layer local CE. The
+same all-layer validation diagnostic evaluates both objectives. This control
+will be run near the promising LR region after the initial local grid, allowing
+the effect of local training to be compared without changing the hidden update
+or CE implementation. It is distinct from historical end-to-end runs with
+native CE and global clipping. A finite single-seed, 1000-step sweep cannot prove
+that all learning-rate or convergence effects have been excluded.
