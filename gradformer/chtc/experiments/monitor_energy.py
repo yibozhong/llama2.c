@@ -1,4 +1,5 @@
 """Read scheduler/log/archive metadata only; no model computation on AP."""
+import argparse
 import concurrent.futures
 import json
 from pathlib import Path
@@ -68,13 +69,19 @@ def inspect(cluster,proc,state):
 
 
 def main():
-    counts=[tuple(map(int,s.split(':'))) for s in sys.argv[1:]]
+    parser=argparse.ArgumentParser()
+    parser.add_argument('clusters',nargs='+',help='cluster:number-of-processes')
+    parser.add_argument('--output-name',default='energy-status')
+    args=parser.parse_args()
+    if not args.output_name.replace('-','').replace('_','').isalnum():
+        parser.error('Output name must be a simple alphanumeric/hyphen/underscore filename stem')
+    counts=[tuple(map(int,s.split(':'))) for s in args.clusters]
     queue=json.loads(subprocess.check_output(['condor_q','-json','-attributes','ClusterId,ProcId,JobStatus,RemoteHost'],text=True))
     states={(r['ClusterId'],r['ProcId']):r for r in queue}
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
         jobs=[pool.submit(inspect,c,p,states.get((c,p),{})) for c,n in counts for p in range(n)]
         records=[f.result() for f in jobs]
-    (ROOT/'reports/energy-status.json').write_text(json.dumps(records,indent=2))
+    (ROOT/f'reports/{args.output_name}.json').write_text(json.dumps(records,indent=2))
     for row in records:print(json.dumps(row))
 
 
