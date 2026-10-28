@@ -30,8 +30,9 @@ def diagnostic_context(model):
 
 
 class CosineProbe:
-    def __init__(self, model, balancer, refresh=False):
+    def __init__(self, model, balancer, refresh=False, teacher=None):
         self.model, self.balancer, self.refresh = model, balancer, refresh
+        self.teacher = teacher
         self.batches, self.losses = [], []
         self.seconds = 0.
 
@@ -106,7 +107,8 @@ class CosineProbe:
         with diagnostic_context(self.model):
             for x, y, old_targets, old_cosines, old_inputs in self.batches:
                 ntp, inputs, predictions = loss_forward(self.model, "llama2", x, y, True)
-                fresh = torch.autograd.grad(ntp, inputs)
+                fresh = (torch.autograd.grad(ntp, inputs) if self.teacher is None
+                         else self.teacher.targets(inputs, predictions, y))
                 layer_rows = []
                 for p, old, new, old_cos, h0, h1 in zip(predictions, old_targets, fresh, old_cosines, old_inputs, inputs):
                     fixed_cos, old_valid = directions(p, old)
@@ -129,21 +131,38 @@ class CosineProbe:
         return result
 
 
-def validation_metrics(model, batches):
+def validation_metrics(model, batches, teacher=None):
     """Self-consistency on fixed validation inputs, using each model's own targets."""
     cosines, fractions = None, []
+    teacher_cosines, teacher_fractions, agreements, teacher_losses = None, [], None, []
     with diagnostic_context(model):
         for x, y in batches:
             ntp, inputs, predictions = loss_forward(model, "llama2", x, y, True)
             targets = torch.autograd.grad(ntp, inputs)
+            teacher_targets = teacher.targets(inputs, predictions, y) if teacher is not None else None
             if cosines is None:
                 cosines = [[] for _ in predictions]
+                if teacher is not None:
+                    teacher_cosines = [[] for _ in predictions]
+                    agreements = [[] for _ in predictions]
             valid_row = []
+            teacher_valid_row = []
             for i, (p, g) in enumerate(zip(predictions, targets)):
                 cosine, valid = directions(p, g)
                 cosines[i].append(cosine[valid])
                 valid_row.append(valid.float().mean())
+                if teacher_targets is not None:
+                    tc, tv = directions(p, teacher_targets[i])
+                    teacher_cosines[i].append(tc[tv])
+                    teacher_valid_row.append(tv.float().mean())
+                    agreement, _ = directions(g, teacher_targets[i])
+                    agreements[i].append(agreement[valid & tv])
             fractions.append(torch.stack(valid_row))
+            if teacher is not None:
+                teacher_fractions.append(torch.stack(teacher_valid_row))
+                with torch.no_grad():
+                    tl, _, _ = loss_forward(teacher.model, "llama2", x, y, False)
+                teacher_losses.append(tl.detach())
     result, means = {}, []
     for i, values in enumerate(cosines):
         values = torch.cat(values)
@@ -157,4 +176,21 @@ def validation_metrics(model, batches):
         result[f"val_cosine/layer_{i}/valid_fraction"] = torch.stack(fractions).mean(0)[i].item()
     result["val_cosine/mean"] = sum(means) / len(means)
     result["val_cosine/early_layers_mean"] = sum(means[:-1]) / max(1, len(means) - 1)
+    if teacher is not None:
+        means = []
+        for i, values in enumerate(teacher_cosines):
+            values = torch.cat(values)
+            common = torch.cat(agreements[i])
+            if not values.numel() or not common.numel():
+                raise RuntimeError("No valid EMA validation targets")
+            mean = values.mean().item()
+            means.append(mean)
+            result[f"val_ema_cosine/layer_{i}/mean"] = mean
+            for name, v in zip(("p10", "p50", "p90"), values.quantile(values.new_tensor([.1, .5, .9])).tolist()):
+                result[f"val_ema_cosine/layer_{i}/{name}"] = v
+            result[f"val_ema_cosine/layer_{i}/valid_fraction"] = torch.stack(teacher_fractions).mean(0)[i].item()
+            result[f"val_ema/layer_{i}/target_agreement"] = common.mean().item()
+        result["val_ema_cosine/mean"] = sum(means) / len(means)
+        result["val_ema_cosine/early_layers_mean"] = sum(means[:-1]) / max(1, len(means) - 1)
+        result["val_ema/ce"] = torch.stack(teacher_losses).mean().item()
     return result

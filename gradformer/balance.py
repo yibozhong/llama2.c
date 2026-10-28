@@ -29,12 +29,14 @@ class NormBalancedBackward:
         self.finished = False
 
     def backward(self, ntp, inputs, predictions, *, alpha=1., beta=1., accumulation=1,
-                 compute_aux=True, observer=None):
+                 compute_aux=True, observer=None, target_gradients=None):
         if self.finished or not inputs or accumulation < 1:
             raise ValueError("Reset the balancer before a new accumulated supervised step")
-        targets = [None] * len(inputs)
+        targets = [None] * len(inputs) if target_gradients is None else target_gradients
+        if len(targets) != len(inputs):
+            raise ValueError("Target/input layer count differs")
         handles = []
-        for i, h in enumerate(inputs if compute_aux else []):
+        for i, h in enumerate(inputs if compute_aux and target_gradients is None else []):
             def capture(grad, index=i):
                 targets[index] = grad.detach() * accumulation
             handles.append(h.register_hook(capture))
@@ -130,14 +132,17 @@ class CosineOnlyBackward(NormBalancedBackward):
     """
 
     def backward(self, ntp, inputs, predictions, *, alpha=0., beta=1., accumulation=1,
-                 compute_aux=True, observer=None):
+                 compute_aux=True, observer=None, target_gradients=None):
         if self.finished or not inputs or accumulation < 1 or not compute_aux:
             raise ValueError("Reset before a fully supervised cosine-only step")
         if alpha != 0 or beta != 1:
             raise ValueError("Strict cosine-only uses alpha=0 and beta=1")
         for p, g in zip(self.parameters, self.aux_gradients):
             p.grad = g
-        targets = torch.autograd.grad(ntp, inputs, retain_graph=True, create_graph=False)
+        targets = (torch.autograd.grad(ntp, inputs, retain_graph=True, create_graph=False)
+                   if target_gradients is None else target_gradients)
+        if len(targets) != len(inputs):
+            raise ValueError("Target/input layer count differs")
         aux, metrics = prediction_loss(predictions, targets, alpha=0., beta=1.)
         if observer is not None:
             observer(inputs, predictions, targets, aux.detach(), metrics.detach())

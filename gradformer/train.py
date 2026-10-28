@@ -58,6 +58,8 @@ def main():
     p.add_argument("--compile", action="store_true")
     p.add_argument("--backward", choices=["reference", "reuse"], default="reference")
     p.add_argument("--parameter-objective", choices=["joint", "cosine-only"], default="joint")
+    p.add_argument("--target-source", choices=["online", "ema"], default="online")
+    p.add_argument("--ema-decay", type=float, default=.99)
     p.add_argument("--gradient-balance", choices=["none", "global", "fixed"], default="none")
     p.add_argument("--balance-ratio", type=float, default=1.)
     p.add_argument("--cosine-probe-every", type=int, default=0)
@@ -70,6 +72,12 @@ def main():
     args = p.parse_args()
     rank, world = int(os.environ.get("RANK", 0)), int(os.environ.get("WORLD_SIZE", 1))
     cosine_only = args.parameter_objective == "cosine-only"
+    if args.target_source == "ema":
+        if (args.backend != "llama2" or world != 1 or args.compile or args.update == "baseline"
+                or args.gradient_balance != "fixed" or args.aux_weight != 1 or args.alpha != 0 or args.beta != 1):
+            p.error("EMA pilot requires eager single-GPU llama2, fixed cosine weight=1, alpha=0, beta=1")
+        if not math.isfinite(args.ema_decay) or not 0 <= args.ema_decay < 1:
+            p.error("EMA decay must be in [0, 1)")
     if cosine_only:
         if (args.backend != "llama2" or world != 1 or args.compile or args.update == "baseline"
                 or args.gradient_balance != "fixed" or args.aux_weight != 1
@@ -107,6 +115,10 @@ def main():
                       vocab=manifest["vocab_size"], sequence=args.sequence,
                       step_size=1.0 if args.update == "sgd" else .01, device=device)
     optimizer = optimizer_for(model, args.backend, args.batch_tokens)
+    teacher = None
+    if args.target_source == "ema":
+        from gradformer.ema import EMATeacher
+        teacher = EMATeacher(model, decay=args.ema_decay)
     balancer = None
     if args.gradient_balance != "none":
         from gradformer.balance import for_model
@@ -119,6 +131,9 @@ def main():
                      "parameters": sum(t.numel() for t in model.parameters()),
                      "gpu": torch.cuda.get_device_name(), "torch": torch.__version__,
                      "target": "unscaled per-microbatch mean NTP input gradient",
+                     "target_definition": "EMA suffix including current layer, at student hidden and fixed incoming student moments" if teacher else "online full-network input gradient",
+                     "ema_update_timing": "once after optimizer and probes, before validation/checkpoint" if teacher else None,
+                     "teacher_parameters": sum(p.numel() for p in teacher.model.parameters()) if teacher else 0,
                      "backward": args.backward, "auxiliary_scope": "full connected graph",
                      "balance_scope": ("fixed cosine weight=1; block norms are diagnostics only" if cosine_only else
                                        "union of block parameters, before clipping/optimizer; scalar applied to all auxiliary gradients") if balancer else None,
@@ -131,6 +146,8 @@ def main():
         previous_config = json.loads((out / "config.json").read_text())
         if previous_config.get("parameter_objective", "joint") != args.parameter_objective:
             p.error("Cannot resume across parameter objectives: optimizer moments would carry the previous objective")
+        if previous_config.get("target_source", "online") != args.target_source:
+            p.error("Cannot change gradient-target source on resume")
         latest = json.loads(latest_path.read_text())
         directory = out / latest["directory"]
         model.load_state_dict(torch.load(directory / "model.pt", map_location=device, weights_only=False))
@@ -140,6 +157,10 @@ def main():
         torch.set_rng_state(state["torch_rng"].cpu())
         torch.cuda.set_rng_state(state["cuda_rng"].cpu())
         start_step, training_seconds, best = state["step"], state["training_seconds"], state["best_val"]
+        if teacher:
+            teacher.load_state_dict(torch.load(directory / "teacher.pt", map_location=device, weights_only=False))
+            if teacher.updates != start_step:
+                raise RuntimeError("EMA update count does not match optimizer step on resume")
         wall_before = state.get("wall_seconds", 0.0)
     live = compile_model(model, args.backend, args.update, args.compile)
     import wandb
@@ -151,7 +172,7 @@ def main():
         run = wandb.init(project="nanochat", entity="yibozhong657-none", id=run_id, resume="allow",
                          name=f"gradformer-{args.backend}-{args.variant or args.update}-seed{args.seed}-{args.phase}",
                          group=f"gradformer-{args.backend}-{args.tokens}tokens",
-                         tags=[args.backend, args.update, "cosine-only-raw-gradient" if cosine_only else "joint-ntp-raw-gradient"],
+                         tags=[args.backend, args.update, args.target_source + "-targets", "cosine-only-raw-gradient" if cosine_only else "joint-ntp-raw-gradient"],
                          job_type=args.phase, config=configuration)
         # W&B's internal history index must advance even when resume re-evaluates
         # the same optimizer step. Keep the actual step as the chart coordinate.
@@ -193,7 +214,7 @@ def main():
         vrng = np.random.default_rng(987654 + rank)
         batches = (batch(val, vrng, args.batch, args.sequence, device)
                    for _ in range(args.cosine_eval_batches))
-        return validation_metrics(model, batches)
+        return validation_metrics(model, batches, teacher=teacher)
 
     def save(step):
         # Two alternating generations; latest.json changes only after all shards finish.
@@ -207,6 +228,8 @@ def main():
                     directory / f"rank-{rank}.pt")
         if rank == 0:
             atomic_save(model.state_dict(), directory / "model.pt")
+            if teacher:
+                atomic_save(teacher.state_dict(), directory / "teacher.pt")
         if world > 1:
             dist.barrier()
         if rank == 0:
@@ -247,17 +270,18 @@ def main():
         probe = None
         if args.cosine_probe_every and (step + 1) % args.cosine_probe_every == 0:
             from gradformer.cosine_probe import CosineProbe
-            probe = CosineProbe(model, balancer, refresh=(step + 1) % args.cosine_probe_refresh_every == 0)
+            probe = CosineProbe(model, balancer, refresh=(step + 1) % args.cosine_probe_refresh_every == 0, teacher=teacher)
         for _ in range(accumulation):
             x, y = batch(train, rng, args.batch, args.sequence, device)
             with context():
                 ntp, states, preds = loss_forward(live, args.backend, x, y, args.update != "baseline")
+                target_gradients = teacher.targets(states, preds, y) if teacher else None
             if balancer:
                 observer = (lambda hs, ps, gs, a, m: probe.observe(x, y, hs, ps, gs, a, m)) if probe else None
                 aux, metrics = balancer.backward(ntp, states, preds, alpha=args.alpha,
                                                 beta=args.beta, accumulation=accumulation,
                                                 compute_aux=args.gradient_balance == "global" or args.aux_weight > 0 or probe is not None,
-                                                observer=observer)
+                                                observer=observer, target_gradients=target_gradients)
             else:
                 aux, metrics = joint_backward(ntp, states, preds, weight=args.aux_weight,
                                               alpha=args.alpha, beta=args.beta, accumulation=accumulation,
@@ -279,6 +303,9 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1., error_if_nonfinite=bool(balancer))
         optimizer.step()
         probe_metrics = probe.after_step() if probe else {}
+        if teacher:
+            teacher.update(model)
+        teacher_metrics = teacher.metrics(model) if teacher and should_log else {}
         torch.cuda.synchronize()
         duration = time.perf_counter() - begin
         training_seconds += duration
@@ -296,6 +323,7 @@ def main():
                           peak_memory_gb=torch.cuda.max_memory_allocated() / 2**30)
             record.update(balance_metrics)
             record.update(probe_metrics)
+            record.update(teacher_metrics)
             if balancer:
                 record["balance/effective_mse_weight"] = balance_metrics["balance/weight"] * args.alpha
                 record["balance/effective_cosine_weight"] = balance_metrics["balance/weight"] * args.beta
