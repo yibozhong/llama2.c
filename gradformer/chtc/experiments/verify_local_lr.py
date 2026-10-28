@@ -67,7 +67,7 @@ def main():
     (ROOT/'reports/local-lr-api-verification.json').write_text(json.dumps(remote,indent=2))
     (ROOT/'reports/sweep-records.json').write_text(json.dumps(records,indent=2))
     with (ROOT/'reports/local-lr-summary.csv').open('w') as f:
-        writer=csv.DictWriter(f,fieldnames=['job','run_id','objective','eta','lr','val_ce','gpu']);writer.writeheader()
+        writer=csv.DictWriter(f,fieldnames=['job','run_id','objective','eta','lr','val_ce','gpu'],lineterminator='\n');writer.writeheader()
         for r in records:writer.writerow({**{k:r[k] for k in ('job','run_id','objective','eta','lr','gpu')},'val_ce':r['final']['val_ce']})
     print(f'Verified {len(records)} completed candidates against metadata, LR schedule, checkpoint audits and W&B API.')
     for r in sorted(records,key=lambda r:(r['objective'],r['final']['val_ce'])):
