@@ -22,7 +22,7 @@ def tiny():
                      sequence=16, step_size=1., device="cuda")
 
 
-def reference_graphs(model, x, y, alpha, beta, amp):
+def reference_graphs(model, x, y, alpha, beta, amp, target_scale=1, scaling_errors=None):
     h = model.tok_embeddings(x)
     for i, block in enumerate(model.layers):
         if i:
@@ -36,6 +36,17 @@ def reference_graphs(model, x, y, alpha, beta, amp):
             logits = F.linear(normalized, weight)
             ce = F.cross_entropy(logits.float().reshape(-1,256), y.reshape(-1), ignore_index=-1)
         target, = torch.autograd.grad(ce, h, retain_graph=True, create_graph=False)
+        if target_scale != 1:
+            # BF16 kernels round CE cotangents before they reach the FP32 input.
+            # Match the production loss scaling in the numerical reference;
+            # separately bound its difference from the unscaled true VJP.
+            scaled, = torch.autograd.grad(ce/target_scale, h, retain_graph=True, create_graph=False)
+            scaled = scaled*target_scale
+            error = relative_error(scaled,target)
+            assert error < .03, error
+            if scaling_errors is not None:
+                scaling_errors.append(error)
+            target = scaled
         assert not target.requires_grad and target.grad_fn is None
         pred, target = direction.float(), target.float()
         valid = y != -1
@@ -52,7 +63,7 @@ def reference_graphs(model, x, y, alpha, beta, amp):
 
 def reference():
     x = torch.arange(32, device="cuda").reshape(2,16)
-    results = {}
+    results,scaling_errors = {},[]
     for amp in (False, True):
         errors = []
         for alpha,beta in ((0.,0.), (0.,.1), (0.,1.), (1.,1.)):
@@ -63,7 +74,8 @@ def reference():
                     yy=yy.clone();yy[0,-1]=-1
                     measured,stats,_=backward(actual,xx,yy,alpha=alpha,beta=beta,accumulation=accumulation,
                                               implementation="dense",amp=amp,diagnostics=True)
-                    for i,loss,ce,ref_stats in reference_graphs(expected,xx,yy,alpha,beta,amp):
+                    for i,loss,ce,ref_stats in reference_graphs(expected,xx,yy,alpha,beta,amp,
+                            target_scale=3*accumulation if amp else 1,scaling_errors=scaling_errors):
                         (loss/(3*accumulation)).backward()
                         torch.testing.assert_close(measured[i,0],ce,rtol=0,atol=0)
                         torch.testing.assert_close(stats[i],ref_stats,rtol=.02 if amp else 2e-5,atol=2e-5)
@@ -77,6 +89,7 @@ def reference():
                         error=(p.grad-q.grad).abs().max().item()
                     errors.append(error)
         results['bf16_max_relative_error' if amp else 'fp32_max_absolute_error']=max(errors)
+    results['bf16_scaled_vs_unscaled_target_relative_error']=max(scaling_errors)
     return results
 
 
