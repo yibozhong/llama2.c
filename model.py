@@ -255,6 +255,10 @@ class Transformer(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
+    def _training_loss(self, hidden, targets):
+        logits = self.output(hidden)
+        return F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
+
     def forward(self, tokens: torch.Tensor, targets: Optional[torch.Tensor] = None, capture_gradients=False, return_loss=False) -> torch.Tensor:
         _bsz, seqlen = tokens.shape
         h = self.tok_embeddings(tokens)
@@ -274,6 +278,12 @@ class Transformer(nn.Module):
                 h, adam_state = hidden_step(h, predicted, self.hidden_step_raw[i], adam_state, i, self.params)
         h = self.norm(h)
 
+        if return_loss:
+            if targets is None:
+                raise ValueError("return_loss requires targets")
+            self.last_loss = self._training_loss(h, targets)
+            return (self.last_loss, h_inputs, predictions) if capture_gradients else self.last_loss
+
         if targets is not None:
             # if we are given some desired targets also calculate the loss
             logits = self.output(h)
@@ -283,13 +293,7 @@ class Transformer(nn.Module):
             logits = self.output(h[:, [-1], :]) # note: using list [-1] to preserve the time dim
             self.last_loss = None
 
-        if return_loss:
-            if targets is None:
-                raise ValueError("return_loss requires targets")
-            value = self.last_loss
-        else:
-            value = logits
-        return (value, h_inputs, predictions) if capture_gradients else value
+        return (logits, h_inputs, predictions) if capture_gradients else logits
 
     def configure_optimizers(self, weight_decay, learning_rate, betas, device_type):
         # start with all of the candidate parameters

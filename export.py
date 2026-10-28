@@ -498,6 +498,8 @@ def model_export(model, filepath, version, dtype=torch.float32):
     v2: int8 quantized Q8_0 export, similar to llama.cpp, in groups
     # TODO: add dtype export support for other versions (?)
     """
+    if getattr(model.params, "hidden_update", "baseline") != "baseline":
+        raise ValueError("Gradformer hidden updates require the PyTorch model; the C/HF export formats do not encode them")
     if version == 0:
         legacy_export(model, filepath)
     elif version == 1:
