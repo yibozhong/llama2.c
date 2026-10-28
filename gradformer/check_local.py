@@ -144,23 +144,35 @@ def fused_model_and_resume():
     # numerical reduction with a change to the hidden update itself.
     forward_errors = {}
     for enabled in (True, False):
-        captured = []
+        captured, logits = [], []
         hook = fused.norm.register_forward_pre_hook(lambda module, inputs: captured.append(inputs[0].detach().clone()))
+        head_hook = fused.output.register_forward_hook(lambda module, inputs, output: logits.append(output.detach().clone()))
         try:
             with torch.set_grad_enabled(enabled):
                 with amp_context(fused):
                     original = fused(x, x + 1, return_loss=True)
                 native_hidden = captured[-1]
+                native_logits = logits[-1]
                 local = list(local_losses(fused, x, x + 1, "dense"))[-1][1]
                 local_hidden = captured[-1]
+                local_logits = logits[-1]
+                fp32_reference = F.cross_entropy(native_logits.float().reshape(-1, 256), (x + 1).reshape(-1))
             forward_errors[f"grad_enabled_{enabled}"] = {
                 "hidden_max_error": (native_hidden - local_hidden).abs().max().item(),
-                "dense_ce_abs_error": (original - local).abs().item()}
+                "logits_max_error": (native_logits - local_logits).abs().max().item(),
+                "fp32_ce_abs_error": (fp32_reference - local).abs().item(),
+                "native_ce_abs_difference": (original - local).abs().item(),
+                "native_ce_dtype": str(original.dtype), "native_logits_dtype": str(native_logits.dtype),
+                "native_ce": original.item(), "local_fp32_ce": local.item()}
             print(json.dumps({"forward_equivalence": forward_errors}), flush=True)
             torch.testing.assert_close(native_hidden, local_hidden, rtol=0, atol=0)
-            torch.testing.assert_close(original, local, rtol=0, atol=0)
+            torch.testing.assert_close(native_logits, local_logits, rtol=0, atol=0)
+            # Local CCE is compared to explicitly fp32 CE throughout. Record
+            # the native loss separately instead of conflating its reduction
+            # precision with preservation of the forward hidden/logit values.
+            torch.testing.assert_close(fp32_reference, local, rtol=0, atol=0)
         finally:
-            hook.remove()
+            hook.remove(); head_hook.remove()
     # Local fused/dense CE agreement was checked above in the training mode.
     model = tiny(); optimizer = model.configure_optimizers(.1, 5e-4, (.9, .95), "cuda")
     for step in range(4):
