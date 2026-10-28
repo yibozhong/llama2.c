@@ -121,6 +121,54 @@ class NormBalancedBackward:
         return result
 
 
-def for_model(model, backend):
+class CosineOnlyBackward(NormBalancedBackward):
+    """NTP supplies detached activation targets; only cosine populates p.grad.
+
+    autograd.grad requests hidden inputs, never parameter gradients. Keeping
+    disconnected parameters at grad=None also prevents optimizer updates/decay
+    on the final norm. The caller must start with fresh cosine-only moments.
+    """
+
+    def backward(self, ntp, inputs, predictions, *, alpha=0., beta=1., accumulation=1,
+                 compute_aux=True, observer=None):
+        if self.finished or not inputs or accumulation < 1 or not compute_aux:
+            raise ValueError("Reset before a fully supervised cosine-only step")
+        if alpha != 0 or beta != 1:
+            raise ValueError("Strict cosine-only uses alpha=0 and beta=1")
+        for p, g in zip(self.parameters, self.aux_gradients):
+            p.grad = g
+        targets = torch.autograd.grad(ntp, inputs, retain_graph=True, create_graph=False)
+        aux, metrics = prediction_loss(predictions, targets, alpha=0., beta=1.)
+        if observer is not None:
+            observer(inputs, predictions, targets, aux.detach(), metrics.detach())
+        (aux / accumulation).backward()
+        self.aux_gradients = [p.grad for p in self.parameters]
+        self.microbatches += 1
+        return aux.detach(), metrics.detach()
+
+    @torch.no_grad()
+    def finish(self, *, ratio=1., accumulation=1, diagnostics=True, eps=1e-12, fixed_weight=None):
+        if self.finished or self.microbatches != accumulation or fixed_weight != 1:
+            raise ValueError("Strict cosine-only requires one fixed-weight finish after accumulation")
+        if any(g is not None for g in self.ntp_gradients):
+            raise RuntimeError("NTP parameter gradients must never enter cosine-only updates")
+        norm = self.norm(self.aux_gradients, self.block_indices)
+        if not torch.isfinite(norm).item():
+            raise RuntimeError("Nonfinite cosine parameter-gradient norm")
+        result = {}
+        if diagnostics:
+            result = {"balance/weight": 1., "objective/ntp_weight": 0.,
+                      "objective/cosine_weight": 1., "cosine/block_grad_norm": norm.item()}
+            for i, indices in enumerate(self.groups):
+                result[f"cosine/layer_{i}/grad_norm"] = self.norm(self.aux_gradients, indices).item()
+        for p, g in zip(self.parameters, self.aux_gradients):
+            p.grad = g
+        self.finished = True
+        self.ntp_gradients = self.aux_gradients = []
+        return result
+
+
+def for_model(model, backend, cosine_only=False):
     blocks = model.transformer.h if backend == "nanochat" else model.layers
-    return NormBalancedBackward(model.parameters(), [list(block.parameters()) for block in blocks])
+    cls = CosineOnlyBackward if cosine_only else NormBalancedBackward
+    return cls(model.parameters(), [list(block.parameters()) for block in blocks])

@@ -1,4 +1,4 @@
-"""Matched-budget native-backend pretraining with the original joint objective.
+"""Matched-budget native-backend pretraining with joint or cosine-only updates.
 
 Run with uv run --extra gpu --group gradformer python -m gradformer.train ...
 or torchrun on a single multi-GPU node. W&B logging is mandatory.
@@ -57,6 +57,7 @@ def main():
     p.add_argument("--save-every", type=int, default=250)
     p.add_argument("--compile", action="store_true")
     p.add_argument("--backward", choices=["reference", "reuse"], default="reference")
+    p.add_argument("--parameter-objective", choices=["joint", "cosine-only"], default="joint")
     p.add_argument("--gradient-balance", choices=["none", "global", "fixed"], default="none")
     p.add_argument("--balance-ratio", type=float, default=1.)
     p.add_argument("--cosine-probe-every", type=int, default=0)
@@ -68,8 +69,14 @@ def main():
     p.add_argument("--phase", choices=["smoke", "pretrain"], default="pretrain")
     args = p.parse_args()
     rank, world = int(os.environ.get("RANK", 0)), int(os.environ.get("WORLD_SIZE", 1))
+    cosine_only = args.parameter_objective == "cosine-only"
+    if cosine_only:
+        if (args.backend != "llama2" or world != 1 or args.compile or args.update == "baseline"
+                or args.gradient_balance != "fixed" or args.aux_weight != 1
+                or args.alpha != 0 or args.beta != 1 or args.backward != "reference"):
+            p.error("Cosine-only requires eager single-GPU llama2, predicted updates, fixed weight=1, alpha=0, beta=1, --backward reference")
     if args.gradient_balance != "none":
-        if world != 1 or args.update == "baseline" or args.backward != "reuse":
+        if world != 1 or args.update == "baseline" or (args.backward != "reuse" and not cosine_only):
             p.error("Separate gradient accumulation requires one GPU, a predicted update and --backward reuse")
         if not math.isfinite(args.aux_weight) or args.aux_weight < 0 or (args.gradient_balance == "global" and args.aux_weight != 1):
             p.error("Use a nonnegative fixed weight, or --aux-weight 1 for global balancing")
@@ -103,7 +110,7 @@ def main():
     balancer = None
     if args.gradient_balance != "none":
         from gradformer.balance import for_model
-        balancer = for_model(model, args.backend)
+        balancer = for_model(model, args.backend, cosine_only=cosine_only)
     source_path = Path("gradformer/source.json")
     source = json.loads(source_path.read_text()) if source_path.exists() else {"status": "unversioned"}
     configuration = {**vars(args), "world_size": world, "accumulation": accumulation,
@@ -113,12 +120,17 @@ def main():
                      "gpu": torch.cuda.get_device_name(), "torch": torch.__version__,
                      "target": "unscaled per-microbatch mean NTP input gradient",
                      "backward": args.backward, "auxiliary_scope": "full connected graph",
-                     "balance_scope": "union of block parameters, before clipping/optimizer; scalar applied to all auxiliary gradients" if balancer else None,
+                     "balance_scope": ("fixed cosine weight=1; block norms are diagnostics only" if cosine_only else
+                                       "union of block parameters, before clipping/optimizer; scalar applied to all auxiliary gradients") if balancer else None,
+                     "ntp_parameter_update_weight": 0 if cosine_only else 1,
                      "optimizer_groups": [{k: v for k, v in g.items() if k != "params"}
                                           for g in optimizer.param_groups]}
     start_step, training_seconds, best = 0, 0., float("inf")
     latest_path = out / "latest.json"
     if args.resume and latest_path.exists():
+        previous_config = json.loads((out / "config.json").read_text())
+        if previous_config.get("parameter_objective", "joint") != args.parameter_objective:
+            p.error("Cannot resume across parameter objectives: optimizer moments would carry the previous objective")
         latest = json.loads(latest_path.read_text())
         directory = out / latest["directory"]
         model.load_state_dict(torch.load(directory / "model.pt", map_location=device, weights_only=False))
@@ -139,7 +151,7 @@ def main():
         run = wandb.init(project="nanochat", entity="yibozhong657-none", id=run_id, resume="allow",
                          name=f"gradformer-{args.backend}-{args.variant or args.update}-seed{args.seed}-{args.phase}",
                          group=f"gradformer-{args.backend}-{args.tokens}tokens",
-                         tags=[args.backend, args.update, "joint-ntp-raw-gradient"],
+                         tags=[args.backend, args.update, "cosine-only-raw-gradient" if cosine_only else "joint-ntp-raw-gradient"],
                          job_type=args.phase, config=configuration)
         # W&B's internal history index must advance even when resume re-evaluates
         # the same optimizer step. Keep the actual step as the chart coordinate.

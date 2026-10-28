@@ -29,10 +29,13 @@ def assert_tree_equal(a, b):
         assert a == b
 
 
-def trajectory(weight):
+def trajectory(weight, cosine_only=False):
     models = [make_model("llama2", "adam", "cuda") for _ in range(2)]
     optimizers = [m.configure_optimizers(.1, 5e-4, (.9, .95), "cuda") for m in models]
-    balancers = [for_model(m, "llama2") for m in models]
+    balancers = [for_model(m, "llama2", cosine_only=cosine_only) for m in models]
+    initial_norm = models[0].norm.weight.detach().clone()
+    initial_eta = models[0].hidden_step_raw[-1].detach().clone()
+    initial_embedding = models[0].tok_embeddings.weight.detach().clone()
     x = torch.arange(16, device="cuda").reshape(2, 8)
     last_metrics = {}
     for step in range(10):
@@ -84,7 +87,16 @@ def trajectory(weight):
                 assert abs(expected_dot - last_metrics["probe/all/raw_cosine_grad_dot_update"]) < 1e-6
         assert_tree_equal(models[0].state_dict(), models[1].state_dict())
         assert_tree_equal(optimizers[0].state_dict(), optimizers[1].state_dict())
-    return dict(steps=10, bitwise_equal_parameters_and_optimizer=True, last_probe=last_metrics)
+        if cosine_only:
+            for model, optimizer in zip(models, optimizers):
+                assert model.norm.weight.grad is None and model.norm.weight not in optimizer.state
+                assert model.hidden_step_raw.grad[-1].item() == 0
+                assert_tree_equal(model.norm.weight, initial_norm)
+                assert_tree_equal(model.hidden_step_raw[-1], initial_eta)
+    if cosine_only:
+        assert not torch.equal(models[0].tok_embeddings.weight, initial_embedding)
+    return dict(steps=10, bitwise_equal_parameters_and_optimizer=True, last_probe=last_metrics,
+                cosine_only=cosine_only, output_only_parameters_unchanged=bool(cosine_only))
 
 
 def main():
