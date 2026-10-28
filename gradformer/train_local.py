@@ -103,6 +103,7 @@ def main():
         temporary = out / "latest.json.tmp"
         temporary.write_text(json.dumps(dict(directory=folder.name, step=step))); temporary.replace(latest_path)
 
+    exit_code = 1
     try:
         value = evaluate(start); best = min(best, value)
         torch.cuda.reset_peak_memory_stats()
@@ -146,8 +147,9 @@ def main():
         run.summary.update(dict(last_step=endpoint, pilot_tokens=endpoint * 32768, pilot_val_ce=value,
                                 best_val_ce=best, training_seconds=training_seconds, completed=endpoint == steps,
                                 stopped_for_resume=endpoint < steps))
+        exit_code = 0
     finally:
-        handle.close(); run.finish()
+        handle.close(); run.finish(exit_code=exit_code)
 
 
 if __name__ == "__main__":

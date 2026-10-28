@@ -1,7 +1,7 @@
 universe = vanilla
 container_image = file:///staging/y/yzhong239/gradformer/llama2-uv-v4.sif
 executable = pretrain-llama-local.sh
-transfer_input_files = ../bundles/llama2-local-v1.tar.gz,../bundles/cce-3de376c.tar.gz,../bundles/dataset-v1.tar,/home/yzhong239/.netrc
+transfer_input_files = ../bundles/llama2-local-v2.tar.gz,../bundles/cce-3de376c.tar.gz,../bundles/dataset-v1.tar,/home/yzhong239/.netrc
 encrypt_input_files = /home/yzhong239/.netrc
 transfer_output_files = results.tar
 transfer_output_remaps = "results.tar=../results/pretrain-llama-local-$(Cluster).tar"

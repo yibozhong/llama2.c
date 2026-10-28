@@ -139,10 +139,29 @@ def fused_model_and_resume():
         error = relative_error(q.grad, p.grad)
         assert error < .04, (name, error)
         errors.append(error)
-    # Original inference values are unchanged by the local gradient boundaries.
-    with torch.no_grad(), amp_context(fused):
-        original = fused(x, x + 1, return_loss=True)
-    torch.testing.assert_close(actual[-1], original, rtol=2e-4, atol=2e-4)
+    # Compare the graph boundary change in identical precision/grad modes.
+    # Also capture hidden states, so this does not confound a CE kernel's
+    # numerical reduction with a change to the hidden update itself.
+    forward_errors = {}
+    for enabled in (True, False):
+        captured = []
+        hook = fused.norm.register_forward_pre_hook(lambda module, inputs: captured.append(inputs[0].detach().clone()))
+        try:
+            with torch.set_grad_enabled(enabled):
+                with amp_context(fused):
+                    original = fused(x, x + 1, return_loss=True)
+                native_hidden = captured[-1]
+                local = list(local_losses(fused, x, x + 1, "dense"))[-1][1]
+                local_hidden = captured[-1]
+            forward_errors[f"grad_enabled_{enabled}"] = {
+                "hidden_max_error": (native_hidden - local_hidden).abs().max().item(),
+                "dense_ce_abs_error": (original - local).abs().item()}
+            print(json.dumps({"forward_equivalence": forward_errors}), flush=True)
+            torch.testing.assert_close(native_hidden, local_hidden, rtol=0, atol=0)
+            torch.testing.assert_close(original, local, rtol=0, atol=0)
+        finally:
+            hook.remove()
+    # Local fused/dense CE agreement was checked above in the training mode.
     model = tiny(); optimizer = model.configure_optimizers(.1, 5e-4, (.9, .95), "cuda")
     for step in range(4):
         optimizer.zero_grad(set_to_none=True)
@@ -171,6 +190,7 @@ def fused_model_and_resume():
     assert_tree_equal([p.grad for p in model.parameters()], gradients)
     assert_tree_equal((torch.get_rng_state(), torch.cuda.get_rng_state()), rng)
     return {"max_parameter_gradient_relative_l2_error": max(errors), "forward_matches_original_hidden_adam": True,
+            "forward_equivalence": forward_errors,
             "checkpoint_roundtrip_exact": True, "next_step_resume_within_tolerance": True,
             "validation_preserves_training_state_and_rng": True}
 
@@ -179,17 +199,22 @@ def main():
     p = argparse.ArgumentParser(); p.add_argument("--output", required=True); args = p.parse_args()
     import wandb
     run = wandb.init(project="nanochat", entity="yibozhong657-none", job_type="correctness",
-                     name="gradformer-local-ce-fused-routing-check", config={**vars(args), "gpu": torch.cuda.get_device_name()})
+                     name="gradformer-local-ce-fused-routing-check", config={**vars(args), "gpu": torch.cuda.get_device_name(),
+                     "source": json.loads(Path('gradformer/source.json').read_text())})
+    result, exit_code = {}, 1
     try:
-        result = {}
         for name, function in (("fused", fused_checks), ("routing", routing_checks),
                                ("reference", reference_checks), ("clipping", clipping_checks),
                                ("model_and_resume", fused_model_and_resume)):
             result[name] = function(); print(json.dumps({"check": name, "result": result[name]}), flush=True)
         result["passed"] = True
-        Path(args.output).write_text(json.dumps(result, indent=2)); run.summary.update(result)
+        exit_code = 0
+    except Exception as error:
+        result.update(passed=False, failure=f"{type(error).__name__}: {error}")
+        raise
     finally:
-        run.finish()
+        Path(args.output).write_text(json.dumps(result, indent=2)); run.summary.update(result)
+        run.finish(exit_code=exit_code)
 
 
 if __name__ == "__main__":

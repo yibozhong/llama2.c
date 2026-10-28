@@ -56,6 +56,7 @@ def main():
                      name="gradformer-local-ce-all-token-benchmark",
                      config={**vars(args), "gpu": torch.cuda.get_device_name(), "accumulation": 8,
                              "source": json.loads(Path('gradformer/source.json').read_text())})
+    exit_code = 1
     try:
         rows = []
         for case in ("e2e-adam-ntp", "local-adam-dense", "local-adam-cce"):
@@ -69,8 +70,9 @@ def main():
         Path(args.output).write_text(json.dumps(result, indent=2)); run.summary.update(result)
         if not result["passed"]:
             raise RuntimeError("Fused local CE exceeds 10x end-to-end hidden-Adam cost gate")
+        exit_code = 0
     finally:
-        run.finish()
+        run.finish(exit_code=exit_code)
 
 
 if __name__ == "__main__":
