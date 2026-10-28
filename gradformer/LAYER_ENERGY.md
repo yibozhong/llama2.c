@@ -112,5 +112,17 @@ Seven remaining configurations submitted together as7336758.0–6 in the order
 listed in energy-cohort.txt. The center subsequently completed1000 steps with
 CE2.335076 and81.642 training seconds, W&B
 [qgo28ibv](https://wandb.ai/yibozhong657-none/nanochat/runs/qgo28ibv).
-Same-GPU ordinary baseline and remaining sweep results pending at this update.
-No quality improvement claim.
+The same-GPU ordinary baseline completed1000 steps with CE1.793137 and75.251
+training seconds, W&B
+[iyh6yugm](https://wandb.ai/yibozhong657-none/nanochat/runs/iyh6yugm).
+Center job exited0; output archive returned; source/config/LR schedule/token
+counts/50-step resume validation/checkpoint status and finished W&B metrics
+were cross-checked. Training seconds exclude startup, evaluation and saving;
+recorded run wall seconds are102.917 (energy) and86.376 (baseline), with the
+energy50-step process restart included and job-level setup/checks excluded.
+
+Thus this SGD center has an8.5% training-time overhead and worse CE at equal
+tokens; no quality/compute benefit is demonstrated. SGD eta.001 also finished
+with CE2.778312 on L40 (pl1ojunt); its GPU seconds are not comparable to the
+Blackwell baseline. Other six sweep configurations are running or queued;
+do not call the sweep complete or generalize the result to every energy design.
