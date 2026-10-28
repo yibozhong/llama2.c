@@ -43,7 +43,7 @@ def load_model(folder):
     return model, config
 
 
-def audit(model, x, y):
+def audit(model, x, y, mse_weight=.1, cosine_weight=.01):
     with torch.autocast("cuda", dtype=torch.bfloat16):
         ntp, inputs, predictions = model(x, y, capture_gradients=True, return_loss=True)
     targets = torch.autograd.grad(ntp, inputs, retain_graph=True)
@@ -52,8 +52,8 @@ def audit(model, x, y):
     groups = [list(block.parameters()) for block in model.layers]
     parameters = [p for group in groups for p in group] + [model.hidden_step_raw]
     gradients = {}
-    # Same hypothetical weights at all checkpoints, including unsupervised controls.
-    for key, loss in (("ntp", ntp), ("mse", .1 * mse), ("cosine", .01 * direction)):
+    # Weights are effective coefficients after the outer auxiliary multiplier.
+    for key, loss in (("ntp", ntp), ("mse", mse_weight * mse), ("cosine", cosine_weight * direction)):
         values = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
         gradients[key] = [g if g is not None else torch.zeros_like(p) for g, p in zip(values, parameters)]
     rows, state, offset = [], None, 0
@@ -125,28 +125,41 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--batches", type=int, default=3)
     parser.add_argument("--probe-steps", type=int, default=200)
+    parser.add_argument("--variants", nargs="+", default=["baseline", "adam-no-aux", "adam-mse-cos"])
+    parser.add_argument("--use-run-weights", action="store_true",
+                        help="Use aux_weight*alpha and aux_weight*beta from each checkpoint config")
+    parser.add_argument("--name", default="gradformer-llama2-gradient-and-hidden-step-audit")
     args = parser.parse_args()
     torch.manual_seed(1337)
     import wandb
     run = wandb.init(project="nanochat", entity="yibozhong657-none", job_type="diagnostic",
-                     name="gradformer-llama2-gradient-and-hidden-step-audit",
+                     name=args.name,
                      config={**vars(args), "gpu": torch.cuda.get_device_name(),
                              "audit_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                             "audit_aux_weights": {"mse": .1, "cosine": .01},
+                             "audit_aux_weights": "checkpoint config" if args.use_run_weights else {"mse": .1, "cosine": .01},
                              "baseline_control": "original baseline represented as hidden SGD eta=1",
                              "frozen_probe": "isolated block copies; frozen inputs/targets; cosine only; no NTP updates"})
     val = np.memmap(Path(args.data) / "val.bin", dtype=np.uint16, mode="r")
     train = np.memmap(Path(args.data) / "train.bin", dtype=np.uint16, mode="r")
     result = {}
-    for variant in ("baseline", "adam-no-aux", "adam-mse-cos"):
+    for variant in args.variants:
         model, config = load_model(Path(args.checkpoints) / variant)
+        weights = (config["aux_weight"] * config["alpha"], config["aux_weight"] * config["beta"]) if args.use_run_weights else (.1, .01)
         rng = np.random.default_rng(987654)
         records = []
         for _ in range(args.batches):
             x, y = batch(val, rng, 16, 256, "cuda")
-            records.append(audit(model, x, y))
-        result[variant] = dict(source=config["source"], configuration=config, batches=records)
-        if variant == "adam-mse-cos":
+            records.append(audit(model, x, y, *weights))
+        result[variant] = dict(source=config["source"], configuration=config, batches=records,
+                               effective_mse_weight=weights[0], effective_cosine_weight=weights[1])
+        summary = dict(variant=variant, mse_weight=weights[0], cosine_weight=weights[1],
+                       mean_ntp=float(np.mean([row["ntp"] for row in records])))
+        for term in ("mse", "cosine"):
+            summary[term + "_to_ntp_per_layer"] = [float(np.mean([
+                row["layers"][layer][term + "_parameter_gradient"]["auxiliary_to_ntp_ratio"]
+                for row in records])) for layer in range(len(model.layers))]
+        print(json.dumps({"gradient_audit": summary}), flush=True)
+        if variant == "adam-mse-cos" and args.probe_steps > 0:
             x, y = batch(train, np.random.default_rng(444), 4, 32, "cuda")
             result[variant]["frozen_target_probe"] = frozen_probe(model, x, y, args.probe_steps, run)
         del model
