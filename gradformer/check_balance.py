@@ -11,7 +11,7 @@ from gradformer.check import make_model, forward
 from gradformer.core import prediction_loss
 
 
-def check(backend, device):
+def check(backend, device, alpha=1., beta=1., fixed_weight=None):
     results = {}
     x = torch.arange(16, device=device).reshape(2, 8)
     y = (x + 1) % 128
@@ -39,11 +39,11 @@ def check(backend, device):
                     ntp, inputs, predictions = forward(ref, backend, x + offset, y + offset, True)
                     # Independent reference differentiates unscaled microbatch CE.
                     targets = torch.autograd.grad(ntp, inputs, retain_graph=True)
-                    aux, _ = prediction_loss(predictions, targets, alpha=1., beta=1.)
+                    aux, _ = prediction_loss(predictions, targets, alpha=alpha, beta=beta)
                     ntp_losses.append(ntp / accumulation)
                     aux_losses.append(aux / accumulation)
                     an, ai, ap = forward(actual, backend, x + offset, y + offset, True)
-                    balancer.backward(an, ai, ap, alpha=1., beta=1., accumulation=accumulation)
+                    balancer.backward(an, ai, ap, alpha=alpha, beta=beta, accumulation=accumulation)
                 nloss, aloss = sum(ntp_losses), sum(aux_losses)
                 ng = torch.autograd.grad(nloss, parameters, retain_graph=True, allow_unused=True)
                 ag = torch.autograd.grad(aloss, parameters, retain_graph=True, allow_unused=True)
@@ -51,10 +51,13 @@ def check(backend, device):
                 a = sum(g.square().sum() for i, g in enumerate(ag) if i in indices and g is not None).sqrt()
                 ratio = .5 if iteration == 0 else 1.
                 coefficient = (ratio * n / a).detach()
+                if fixed_weight is not None:
+                    coefficient = coefficient.new_tensor(fixed_weight)
                 (nloss + coefficient * aloss).backward()
-                diagnostic = balancer.finish(ratio=ratio, accumulation=accumulation)
-                assert abs(diagnostic["balance/aux_to_ntp_ratio"] - ratio) < 2e-5
-                assert abs(diagnostic["balance/weight"] / coefficient.item() - 1) < 2e-4
+                diagnostic = balancer.finish(ratio=ratio, accumulation=accumulation, fixed_weight=fixed_weight)
+                expected_ratio = ratio if fixed_weight is None else (coefficient * a / n).item()
+                assert abs(diagnostic["balance/aux_to_ntp_ratio"] - expected_ratio) < 2e-5
+                assert abs(diagnostic["balance/weight"] - coefficient.item()) < 2e-4 * max(1., coefficient.item())
                 assert diagnostic["balance/active"] == 1
                 ratios.append(diagnostic["balance/aux_to_ntp_ratio"])
                 for (name, p), (other, q) in zip(ref.named_parameters(), actual.named_parameters()):

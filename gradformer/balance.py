@@ -28,28 +28,34 @@ class NormBalancedBackward:
         self.microbatches = 0
         self.finished = False
 
-    def backward(self, ntp, inputs, predictions, *, alpha=1., beta=1., accumulation=1):
+    def backward(self, ntp, inputs, predictions, *, alpha=1., beta=1., accumulation=1,
+                 compute_aux=True, observer=None):
         if self.finished or not inputs or accumulation < 1:
             raise ValueError("Reset the balancer before a new accumulated supervised step")
         targets = [None] * len(inputs)
         handles = []
-        for i, h in enumerate(inputs):
+        for i, h in enumerate(inputs if compute_aux else []):
             def capture(grad, index=i):
                 targets[index] = grad.detach() * accumulation
             handles.append(h.register_hook(capture))
         for p, g in zip(self.parameters, self.ntp_gradients):
             p.grad = g
         try:
-            (ntp / accumulation).backward(retain_graph=True)
+            (ntp / accumulation).backward(retain_graph=compute_aux)
         finally:
             for handle in handles:
                 handle.remove()
         self.ntp_gradients = [p.grad for p in self.parameters]
+        if not compute_aux:
+            self.microbatches += 1
+            return ntp.new_zeros(()), None
         if any(g is None for g in targets):
             raise RuntimeError("A layer input is disconnected from NTP")
         for p, g in zip(self.parameters, self.aux_gradients):
             p.grad = g
         aux, metrics = prediction_loss(predictions, targets, alpha=alpha, beta=beta)
+        if observer is not None:
+            observer(inputs, predictions, targets, aux.detach(), metrics.detach())
         (aux / accumulation).backward()
         self.aux_gradients = [p.grad for p in self.parameters]
         self.microbatches += 1
@@ -67,17 +73,21 @@ class NormBalancedBackward:
                     and self.aux_gradients[i] is not None), zero)
 
     @torch.no_grad()
-    def finish(self, *, ratio=1., accumulation=1, diagnostics=True, eps=1e-12):
+    def finish(self, *, ratio=1., accumulation=1, diagnostics=True, eps=1e-12, fixed_weight=None):
         if self.finished or self.microbatches != accumulation:
             raise ValueError("Balance exactly once after all microbatches")
         if not math.isfinite(ratio) or ratio <= 0:
             raise ValueError("Target gradient norm ratio must be finite and positive")
+        if fixed_weight is not None and (not math.isfinite(fixed_weight) or fixed_weight < 0):
+            raise ValueError("Fixed auxiliary weight must be finite and nonnegative")
         ntp_norm = self.norm(self.ntp_gradients, self.block_indices)
         aux_norm = self.norm(self.aux_gradients, self.block_indices)
         if not torch.isfinite(torch.stack((ntp_norm, aux_norm))).all().item():
             raise RuntimeError("Nonfinite parameter-gradient norm before balancing")
         active = (ntp_norm > eps) & (aux_norm > eps)
         scale = torch.where(active, ratio * ntp_norm / aux_norm.clamp_min(eps), torch.zeros_like(ntp_norm))
+        if fixed_weight is not None:
+            scale = ntp_norm.new_tensor(fixed_weight)
         if not torch.isfinite(scale).item():
             raise RuntimeError("Nonfinite dynamic auxiliary coefficient")
         # No EMA or cap: each nondegenerate macrostep matches the requested norm.
@@ -86,7 +96,7 @@ class NormBalancedBackward:
                 gradient.mul_(scale)
         weighted_norm = self.norm(self.aux_gradients, self.block_indices)
         actual_ratio = weighted_norm / ntp_norm.clamp_min(eps)
-        if active.item() and not torch.isclose(actual_ratio, actual_ratio.new_tensor(ratio), rtol=2e-5, atol=2e-6).item():
+        if fixed_weight is None and active.item() and not torch.isclose(actual_ratio, actual_ratio.new_tensor(ratio), rtol=2e-5, atol=2e-6).item():
             raise RuntimeError("Actual weighted auxiliary gradient does not match requested ratio")
         result = {}
         if diagnostics:

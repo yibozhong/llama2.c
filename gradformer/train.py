@@ -57,8 +57,11 @@ def main():
     p.add_argument("--save-every", type=int, default=250)
     p.add_argument("--compile", action="store_true")
     p.add_argument("--backward", choices=["reference", "reuse"], default="reference")
-    p.add_argument("--gradient-balance", choices=["none", "global"], default="none")
+    p.add_argument("--gradient-balance", choices=["none", "global", "fixed"], default="none")
     p.add_argument("--balance-ratio", type=float, default=1.)
+    p.add_argument("--cosine-probe-every", type=int, default=0)
+    p.add_argument("--cosine-probe-refresh-every", type=int, default=250)
+    p.add_argument("--cosine-eval-batches", type=int, default=0)
     p.add_argument("--resume", action="store_true")
     p.add_argument("--stop-after-step", type=int, default=0, help="Controlled interruption; keep original schedule horizon")
     p.add_argument("--variant", default=None, help="Display label for architecture/supervision ablation")
@@ -66,10 +69,19 @@ def main():
     args = p.parse_args()
     rank, world = int(os.environ.get("RANK", 0)), int(os.environ.get("WORLD_SIZE", 1))
     if args.gradient_balance != "none":
-        if world != 1 or args.update == "baseline" or args.backward != "reuse" or args.aux_weight != 1:
-            p.error("Global balancing currently requires one GPU, a supervised update, --backward reuse and --aux-weight 1")
+        if world != 1 or args.update == "baseline" or args.backward != "reuse":
+            p.error("Separate gradient accumulation requires one GPU, a predicted update and --backward reuse")
+        if not math.isfinite(args.aux_weight) or args.aux_weight < 0 or (args.gradient_balance == "global" and args.aux_weight != 1):
+            p.error("Use a nonnegative fixed weight, or --aux-weight 1 for global balancing")
         if not math.isfinite(args.balance_ratio) or args.balance_ratio <= 0:
             p.error("--balance-ratio must be finite and positive")
+    if args.cosine_probe_every or args.cosine_eval_batches:
+        if args.backend != "llama2" or world != 1 or args.compile or args.alpha != 0 or args.beta != 1 or args.gradient_balance == "none":
+            p.error("Cosine probes require eager single-GPU llama2, alpha=0, beta=1, and separate gradient accumulation")
+    if args.cosine_probe_every < 0 or args.cosine_eval_batches < 0 or args.cosine_probe_refresh_every <= 0:
+        p.error("Invalid cosine diagnostic interval/count")
+    if args.cosine_probe_every and args.cosine_probe_refresh_every % args.cosine_probe_every:
+        p.error("Refresh interval must be a multiple of the probe interval")
     local = int(os.environ.get("LOCAL_RANK", 0))
     torch.cuda.set_device(local)
     device = torch.device("cuda", local)
@@ -89,7 +101,7 @@ def main():
                       step_size=1.0 if args.update == "sgd" else .01, device=device)
     optimizer = optimizer_for(model, args.backend, args.batch_tokens)
     balancer = None
-    if args.gradient_balance == "global":
+    if args.gradient_balance != "none":
         from gradformer.balance import for_model
         balancer = for_model(model, args.backend)
     source_path = Path("gradformer/source.json")
@@ -162,6 +174,15 @@ def main():
         model.train()
         return value.item()
 
+    def cosine_evaluate():
+        if not args.cosine_eval_batches:
+            return {}
+        from gradformer.cosine_probe import validation_metrics
+        vrng = np.random.default_rng(987654 + rank)
+        batches = (batch(val, vrng, args.batch, args.sequence, device)
+                   for _ in range(args.cosine_eval_batches))
+        return validation_metrics(model, batches)
+
     def save(step):
         # Two alternating generations; latest.json changes only after all shards finish.
         previous = json.loads(latest_path.read_text())["directory"] if latest_path.exists() else "checkpoint-1"
@@ -189,7 +210,7 @@ def main():
         if rank == 0:
             atomic_save(model.state_dict(), out / "best-model.pt")
     emit(dict(step=start_step, tokens=start_step * args.batch_tokens, val_ce=value,
-              training_seconds=training_seconds))
+              training_seconds=training_seconds, **cosine_evaluate()))
     torch.cuda.reset_peak_memory_stats()
     for step in range(start_step, steps):
         warmup = min(100, max(1, int(.05 * steps)))
@@ -211,13 +232,20 @@ def main():
         torch.cuda.synchronize(); begin = time.perf_counter()
         micro_losses, micro_aux = [], []
         metrics = None
+        probe = None
+        if args.cosine_probe_every and (step + 1) % args.cosine_probe_every == 0:
+            from gradformer.cosine_probe import CosineProbe
+            probe = CosineProbe(model, balancer, refresh=(step + 1) % args.cosine_probe_refresh_every == 0)
         for _ in range(accumulation):
             x, y = batch(train, rng, args.batch, args.sequence, device)
             with context():
                 ntp, states, preds = loss_forward(live, args.backend, x, y, args.update != "baseline")
             if balancer:
+                observer = (lambda hs, ps, gs, a, m: probe.observe(x, y, hs, ps, gs, a, m)) if probe else None
                 aux, metrics = balancer.backward(ntp, states, preds, alpha=args.alpha,
-                                                beta=args.beta, accumulation=accumulation)
+                                                beta=args.beta, accumulation=accumulation,
+                                                compute_aux=args.gradient_balance == "global" or args.aux_weight > 0 or probe is not None,
+                                                observer=observer)
             else:
                 aux, metrics = joint_backward(ntp, states, preds, weight=args.aux_weight,
                                               alpha=args.alpha, beta=args.beta, accumulation=accumulation,
@@ -225,9 +253,12 @@ def main():
             if not torch.isfinite(aux).item():
                 raise RuntimeError(f"Nonfinite auxiliary loss at step {step}")
             micro_losses.append(ntp.detach()); micro_aux.append(aux)
-        should_log = (step + 1) % 10 == 0 or step == start_step
+        should_log = (step + 1) % 10 == 0 or step == start_step or probe is not None
+        if probe:
+            probe.before_step()
         balance_metrics = balancer.finish(ratio=args.balance_ratio, accumulation=accumulation,
-                                          diagnostics=should_log) if balancer else {}
+                                          diagnostics=should_log,
+                                          fixed_weight=args.aux_weight if args.gradient_balance == "fixed" else None) if balancer else {}
         if args.backend == "llama2":
             if world > 1:
                 for parameter in model.parameters():
@@ -235,6 +266,7 @@ def main():
                         dist.all_reduce(parameter.grad, op=dist.ReduceOp.AVG)
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1., error_if_nonfinite=bool(balancer))
         optimizer.step()
+        probe_metrics = probe.after_step() if probe else {}
         torch.cuda.synchronize()
         duration = time.perf_counter() - begin
         training_seconds += duration
@@ -251,6 +283,7 @@ def main():
                           training_seconds=training_seconds,
                           peak_memory_gb=torch.cuda.max_memory_allocated() / 2**30)
             record.update(balance_metrics)
+            record.update(probe_metrics)
             if balancer:
                 record["balance/effective_mse_weight"] = balance_metrics["balance/weight"] * args.alpha
                 record["balance/effective_cosine_weight"] = balance_metrics["balance/weight"] * args.beta
@@ -270,12 +303,14 @@ def main():
                 if rank == 0:
                     atomic_save(model.state_dict(), out / "best-model.pt")
             emit(dict(step=step + 1, tokens=(step + 1) * args.batch_tokens, val_ce=value,
-                      best_val_ce=best, training_seconds=training_seconds))
+                      best_val_ce=best, training_seconds=training_seconds, **cosine_evaluate()))
         if (step + 1) % args.save_every == 0 or step + 1 == steps or step + 1 == args.stop_after_step:
             save(step + 1)
         if step + 1 == args.stop_after_step and step + 1 < steps:
             if rank == 0:
-                run.summary.update(dict(completed=False, stopped_for_resume=True, last_step=step + 1))
+                run.summary.update(dict(completed=False, stopped_for_resume=True, last_step=step + 1,
+                                        pilot_val_ce=value, pilot_tokens=(step + 1) * args.batch_tokens,
+                                        training_seconds=training_seconds))
                 run.finish(); log_file.close()
             if world > 1:
                 dist.destroy_process_group()
