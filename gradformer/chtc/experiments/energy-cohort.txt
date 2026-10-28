@@ -1,0 +1,7 @@
+sgd .001 .0005 eta-small checked
+sgd .1 .0005 eta-large checked
+sgd .01 .00005 lr-small checked
+sgd .01 .005 lr-large checked
+adam .001 .0005 adam-small checked
+adam .01 .0005 adam-center checked
+adam .1 .0005 adam-large checked
