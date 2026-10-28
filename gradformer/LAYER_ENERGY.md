@@ -80,4 +80,37 @@ compilation/startup separately from steady training time, and do not infer
 equal wall time from different GPU models. Single-seed short pilots are not a
 definitive architecture verdict.
 
-Implementation and test results: pending GPU gate at initial commit.
+## Verified gate and submission
+
+Training source8803aef, immutable energy-v1 bundle. Center7336756.0 on RTX PRO
+6000 Blackwell passed the full GPU gate, W&B check run
+[ls6jorn4](https://wandb.ai/yibozhong657-none/nanochat/runs/ls6jorn4):
+
+- FP64 analytic/autograd gradient relative error9.23e-17; outer gradient error
+  2.47e-16; directional finite-difference discrepancy2.85e-12.
+- Full-model FP32 parameter gradients relative error below7.32e-7; BF16 below
+  .00177 against nested autograd. Compiler BF16 max per-parameter relative
+  difference.0257 (Adam); CCE versus dense below.0073.
+- Both SGD/Adam passed causal-prefix, batch duplication, inference_mode and
+  exact next-update checkpoint restoration tests. All parameters received
+  finite nonzero final-CE gradients.
+
+Short fixed-input benchmark on the same GPU (4 measured steps after2 warmups,
+excluding compilation/startup,32768 tokens/step):
+
+| Model | Parameters | Seconds/step | Peak allocated GiB |
+| --- | ---: | ---: | ---: |
+| Standard residual | 15,191,712 | .063550 | .5484 |
+| Energy SGD | 15,200,358 | .068193 | .6139 |
+| Energy Adam | 15,200,358 | .082771 | .8067 |
+
+The SGD and Adam overheads are approximately7% and30% in this short benchmark;
+this is not time to equal quality, nor does it include real-data loading.
+
+Center passed the50-step gate (CE7.349141) and exact same validation after resume.
+Seven remaining configurations submitted together as7336758.0–6 in the order
+listed in energy-cohort.txt. The center subsequently completed1000 steps with
+CE2.335076 and81.642 training seconds, W&B
+[qgo28ibv](https://wandb.ai/yibozhong657-none/nanochat/runs/qgo28ibv).
+Same-GPU ordinary baseline and remaining sweep results pending at this update.
+No quality improvement claim.
