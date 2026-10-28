@@ -7,3 +7,6 @@ outputs/
 .netrc
 *.token
 gradformer/source.json
+
+__pycache__/
+*.py[cod]
