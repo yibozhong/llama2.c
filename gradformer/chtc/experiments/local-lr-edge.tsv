@@ -1,0 +1,6 @@
+0.01 0.015 edge-local-eta0.01-lr0.015 local no
+0.01 0.015 edge-e2e-eta0.01-lr0.015 e2e no
+0.1 0.015 edge-local-eta0.1-lr0.015 local no
+0.1 0.015 edge-e2e-eta0.1-lr0.015 e2e no
+1 0.0005 edge-local-eta1-lr0.0005 local no
+1 0.0005 edge-e2e-eta1-lr0.0005 e2e no

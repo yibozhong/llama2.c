@@ -129,3 +129,7 @@ have the same initial tuning budget, allowing the effect of local training to
 be compared without changing the hidden update or CE implementation. It is distinct from historical end-to-end runs with
 native CE and global clipping. A finite single-seed, 1000-step sweep cannot prove
 that all learning-rate or convergence effects have been excluded.
+
+
+The completed 26-run sweep, exhaustive selected-model validation, cost limits
+and exact scope are documented in [LOCAL_LR_RESULTS.md](LOCAL_LR_RESULTS.md).

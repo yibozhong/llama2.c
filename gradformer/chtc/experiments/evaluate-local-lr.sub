@@ -1,0 +1,22 @@
+universe = vanilla
+container_image = file:///staging/y/yzhong239/gradformer/llama2-uv-v4.sif
+executable = evaluate-local-lr.sh
+transfer_input_files = ../bundles/llama2-local-lr-eval-v1.tar.gz,../bundles/local-lr-selected-models.tar,../bundles/cce-3de376c.tar.gz,../bundles/dataset-v1.tar,/home/yzhong239/.netrc
+encrypt_input_files = /home/yzhong239/.netrc
+transfer_output_files = results.tar.gz
+transfer_output_remaps = "results.tar.gz=../results/evaluate-local-lr-$(Cluster).tar"
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+log = ../logs/evaluate-local-lr.$(Cluster).log
+output = ../logs/evaluate-local-lr.$(Cluster).out
+error = ../logs/evaluate-local-lr.$(Cluster).err
+requirements = (HasCHTCStaging == true)
+request_gpus = 1
+gpus_minimum_memory = 10000M
+gpus_minimum_capability = 8.0
+request_cpus = 2
+request_memory = 6GB
+request_disk = 20GB
++WantGPULab = true
++GPUJobLength = "short"
+queue 1
