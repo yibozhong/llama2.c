@@ -129,7 +129,7 @@ Blackwell baseline. All remaining configurations subsequently completed; see fin
 
 ## Completed pilot sweep
 
-All8 jobs exited0 and all9 training runs completed1000 steps /32,768,000 tokens. Source/config/data/seed/LR schedules/token counts/finite metrics/saved-checkpoint status and finished W&B final metrics were cross-checked. Full workspace metadata audit: ../../reports/energy-final-audit.json. The50-step resume CE check used1e-6 tolerance:one Adam run differed by4.768e-7 (one FP32 ULP), all others were identical. The independent allocated-GPU next-update restoration test was exact.
+All8 jobs exited0 and all9 training runs completed1000 steps /32,768,000 tokens. Source/config/data/seed/LR schedules/token counts/finite metrics/saved-checkpoint status and finished W&B final metrics were cross-checked. Full metadata audit in the workspace: /home/yzhong239/gradformer/reports/energy-final-audit.json. The50-step resume CE check used1e-6 tolerance:one Adam run differed by4.768e-7 (one FP32 ULP), all others were identical. The independent allocated-GPU next-update restoration test was exact.
 
 | Hidden update | Initial eta | Parameter LR | Validation CE | GPU | Run |
 | --- | ---: | ---: | ---: | --- | --- |
