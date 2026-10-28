@@ -1,0 +1,5 @@
+0 0 0.0005 local-ce-control quick
+0 0.1 0.0005 cosine-weak quick
+0 1 0.00005 cosine-lr-low quick
+0 1 0.005 cosine-lr-high quick
+1 1 0.0005 mse-cosine quick
