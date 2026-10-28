@@ -144,6 +144,8 @@ def main():
     result = {}
     for variant in args.variants:
         model, config = load_model(Path(args.checkpoints) / variant)
+        if args.use_run_weights and config.get("gradient_balance", "none") != "none":
+            raise ValueError("Dynamic weights depend on the full accumulated batch; use balance/* training diagnostics, not fixed-weight microbatch audit")
         weights = (config["aux_weight"] * config["alpha"], config["aux_weight"] * config["beta"]) if args.use_run_weights else (.1, .01)
         rng = np.random.default_rng(987654)
         records = []
