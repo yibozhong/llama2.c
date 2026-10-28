@@ -1,0 +1,22 @@
+universe = vanilla
+container_image = file:///staging/y/yzhong239/gradformer/llama2-uv-v2.sif
+executable = continue-llama-cosine.sh
+arguments = $(variant)
+transfer_input_files = ../bundles/llama2-cosine-v1.tar.gz,../bundles/dataset-v1.tar,../bundles/$(variant)-step1000.tar,/home/yzhong239/.netrc
+encrypt_input_files = /home/yzhong239/.netrc
+transfer_output_files = results.tar
+transfer_output_remaps = "results.tar=../results/continue-llama-cosine-$(Cluster)-$(variant).tar"
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+log = ../logs/continue-llama-cosine.$(Cluster).$(ProcId).log
+output = ../logs/continue-llama-cosine.$(Cluster).$(ProcId).out
+error = ../logs/continue-llama-cosine.$(Cluster).$(ProcId).err
+requirements = (HasCHTCStaging == true)
+request_gpus = 1
+require_gpus = (DeviceName == "NVIDIA H200")
+request_cpus = 2
+request_memory = 16GB
+request_disk = 15GB
++WantGPULab = true
++GPUJobLength = "short"
+queue variant in (cosine-B-fixed1, cosine-C-balanced1)
