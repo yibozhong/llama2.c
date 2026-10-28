@@ -159,8 +159,8 @@ def main():
                 value = evaluate(step+1); best = min(best, value)
             if step+1 == args.stop_after_step:
                 save(step+1)
-        run.summary.update(last_step=args.stop_after_step, pilot_tokens=args.stop_after_step*32768,
-                           pilot_val_ce=value, best_val_ce=best, training_seconds=elapsed)
+        run.summary.update(dict(last_step=args.stop_after_step, pilot_tokens=args.stop_after_step*32768,
+                                pilot_val_ce=value, best_val_ce=best, training_seconds=elapsed))
         code = 0
     finally:
         handle.close(); run.finish(exit_code=code)

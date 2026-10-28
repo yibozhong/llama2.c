@@ -41,7 +41,7 @@ readout/validation definition is unchanged from the local SGD experiment.
 | High parameter LR | 0 | 1 | .005 |
 | Scale and direction constraint | 1 | 1 | .0005 |
 
-Use the immutable llama2-local-gradient-v2 bundle and uv-locked llama2-uv-v4
+Use the immutable llama2-local-gradient-v3 bundle and uv-locked llama2-uv-v4
 container with CCE source 3de376c. Submit the center first, then submit the
 remaining five together after the full GPU correctness and 50-step gates pass.
 Every job has a GPU check and exact-configuration 50-to-1000-step resume.

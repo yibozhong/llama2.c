@@ -14,11 +14,11 @@ export CC=/usr/bin/gcc CXX=/usr/bin/g++
 export TRITON_CACHE_DIR="$PWD/triton-cache" TORCHINDUCTOR_CACHE_DIR="$PWD/inductor-cache"
 cp /opt/gradformer-environment.txt results/container-environment.txt
 cp /opt/gradformer-locks.txt results/container-locks.txt
-tar -xzf llama2-local-gradient-v2.tar.gz
+tar -xzf llama2-local-gradient-v3.tar.gz
 tar -xzf cce-3de376c.tar.gz
 tar -xf dataset-v1.tar
 export PYTHONPATH="$PWD/cce-source${PYTHONPATH:+:$PYTHONPATH}"
-sha256sum cce-3de376c.tar.gz llama2-local-gradient-v2.tar.gz > results/input-hashes.txt
+sha256sum cce-3de376c.tar.gz llama2-local-gradient-v3.tar.gz > results/input-hashes.txt
 python - <<'ENVIRONMENT'
 import json,sys,torch,triton,cut_cross_entropy
 from pathlib import Path
