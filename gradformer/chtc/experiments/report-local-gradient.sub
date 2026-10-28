@@ -1,0 +1,17 @@
+universe = vanilla
+container_image = file:///staging/y/yzhong239/gradformer/nanochat-uv-v4.sif
+executable = report-local-gradient.sh
+transfer_input_files = ../reports/render_local_gradient.py,../reports/local-gradient-records.json,../bundles/local-gradient-selected-models.tar,/home/yzhong239/.netrc
+encrypt_input_files = /home/yzhong239/.netrc
+transfer_output_files = results.tar.gz
+transfer_output_remaps = "results.tar.gz=../results/report-local-gradient-$(Cluster).tar.gz"
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+log = ../logs/report-local-gradient.$(Cluster).log
+output = ../logs/report-local-gradient.$(Cluster).out
+error = ../logs/report-local-gradient.$(Cluster).err
+requirements = (HasCHTCStaging == true)
+request_cpus = 1
+request_memory = 2GB
+request_disk = 10GB
+queue 1

@@ -1,0 +1,24 @@
+{
+  "status": "cancelled_by_user",
+  "recorded_utc": "2026-10-28T23:13:04.476797+00:00",
+  "jobs": [
+    "7336232.0",
+    "7336233.0",
+    "7336233.1",
+    "7336233.2",
+    "7336233.3",
+    "7336233.4"
+  ],
+  "queue_absence_verified": true,
+  "center_run": "tyu081sc",
+  "center_last_logged_step": 590,
+  "center_last_validation_step": 500,
+  "center_ce": 2.5904300212860107,
+  "center_cosine": 0.035335224121809006,
+  "historical_same_step_local_ce": 2.3624606132507324,
+  "historical_same_step_e2e_ce": 2.113111972808838,
+  "comparison": "same tokens/steps, different GPUs; not matched wall-clock",
+  "remaining_candidates_incomplete": true,
+  "report_job_submitted": false,
+  "do_not_resume": true
+}

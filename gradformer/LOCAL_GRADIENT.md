@@ -63,3 +63,50 @@ local baseline at zero auxiliary, CCE versus dense derivatives, diagnostic
 side effects, checkpoint recovery, and a full 16x256x288/32k-vocabulary batch.
 Final checkpoint audits verify finite model/optimizer, actual LR schedule,
 trained final norm and positive hidden step sizes. No training runs on the AP.
+
+## Stopped at the user's request (2026-10-28)
+
+The user cancelled this direction while the pilot/sweep was in progress. All
+six jobs, 7336232.0 and 7336233.0–4, were removed and their absence from the
+queue was confirmed. Do not resume them or launch the prepared report/evaluation
+jobs without a new instruction. This is an incomplete experiment, not a
+completed six-configuration sweep.
+
+Training source `bf80fa1f328e8845d8777dcbe12d5f3913583689` (immutable v3 bundle)
+passed the independent GPU reference, zero-auxiliary baseline equivalence,
+local routing, fused CE and exact recovery checks. The center reached at least
+590 logged steps; the last validation was at step 500. The new zero-auxiliary
+control reached 200 logged steps and had only completed its step-50 validation.
+Other candidates had no training result at cancellation.
+
+The following is a **same-step/token** comparison against the earlier completed
+local SGD and matched end-to-end runs, both using initial eta1, peak parameter
+LR .0005, seed1337, the same data order, schedule and fixed validation sample:
+
+| Steps | Local CE + cosine1 (current) | Local CE (historical) | End-to-end NTP (historical) |
+| ---: | ---: | ---: | ---: |
+| 250 | 3.119218 | 2.920830 | 2.619310 |
+| 500 | 2.590430 | 2.362461 | 2.113112 |
+
+At step500 the center's local input-gradient cosine was .035335. Its CE was
+.228 worse than local CE and .477 worse than end-to-end NTP. The center used
+L40; historical runs used H200, so their elapsed seconds are not a matched
+hardware efficiency comparison. Partial results support deprioritizing this
+center configuration, not a conclusion about unrun hyperparameters or all
+gradient-constrained architectures.
+
+[Current center tyu081sc](https://wandb.ai/yibozhong657-none/nanochat/runs/tyu081sc),
+[partial control sr6wibvm](https://wandb.ai/yibozhong657-none/nanochat/runs/sr6wibvm),
+[historical local g67o54rx](https://wandb.ai/yibozhong657-none/nanochat/runs/g67o54rx),
+and [historical e2e k1pg6pt6](https://wandb.ai/yibozhong657-none/nanochat/runs/k1pg6pt6)
+retain logged metrics. W&B can temporarily display a stale running state after
+scheduler removal; the Condor abort events are the authoritative cancellation
+record. Live metric snapshots and the W&B API snapshot were saved on the AP.
+No final 1000-step checkpoint or result artifact is claimed for these cancelled
+runs. Prepared report scripts require all six completed runs and were not run.
+
+Two earlier attempts are excluded: 7336195 failed a BF16 reference comparison
+before training; matching loss scaling bounded the BF16 target discrepancy
+without changing the production gradient code. Then 7336200 trained50 steps
+but failed on a W&B summary-call signature; v3 fixes that logging call and
+restarts from the same seed. Those failures are preserved separately.

@@ -1,0 +1,10 @@
+{
+  "7336232": {
+    "manifest": "local-gradient-center.tsv",
+    "source": "bf80fa1f328e8845d8777dcbe12d5f3913583689"
+  },
+  "7336233": {
+    "manifest": "local-gradient-sweep.tsv",
+    "source": "bf80fa1f328e8845d8777dcbe12d5f3913583689"
+  }
+}
