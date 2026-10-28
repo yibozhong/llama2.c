@@ -14,6 +14,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest==8.4.2", "matplotlib==3.10.7"]
+local-ce = [
+    "cut-cross-entropy",
+]
 
 [project.optional-dependencies]
 gpu = ["torch==2.9.1"]
@@ -24,6 +27,7 @@ torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu128", extra = "gpu" },
 ]
+cut-cross-entropy = { git = "https://github.com/apple-aiml-research/ml-cross-entropy.git", rev = "3de376c106a1916bc5e1b619f9c77c87a461ee1c" }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
