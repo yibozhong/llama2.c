@@ -1,0 +1,2 @@
+baseline .01 .0015 baseline-lr-refine-low checked
+baseline .01 .015 baseline-lr-refine-high checked

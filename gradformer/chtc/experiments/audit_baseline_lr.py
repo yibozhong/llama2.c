@@ -53,10 +53,12 @@ def main():
         assert r['config']['parameter_lr']['value']==trial['lr'] and r['config']['kind']['value']=='baseline'
         log=(ROOT/f'logs/pretrain-llama-energy.{job}.log').read_text()
         assert 'Normal termination (return value 0)' in log
-        records.append(dict(**trial,run_id=s['run_id'],val_ce=vals[-1]['val_ce'],best_val_ce=s['best_val_ce'],
+        record=dict(trial)
+        record.update(dict(run_id=s['run_id'],val_ce=vals[-1]['val_ce'],best_val_ce=s['best_val_ce'],
                             training_seconds=s['training_seconds'],wall_seconds=s['wall_seconds'],gpu=c['gpu'],
                             resume_val_absolute_difference=error,checks_passed=True,wandb_finished=True,
                             curve=[dict(step=v['step'],ce=v['val_ce']) for v in vals]))
+        records.append(record)
     records.sort(key=lambda row:row['lr'])
     (ROOT/'reports/baseline-lr-audit.json').write_text(json.dumps(dict(all_passed=True,runs=records,common=common),indent=2))
     (ROOT/'reports/baseline-lr-wandb.json').write_text(json.dumps({r['run_id']:remote[r['run_id']] for r in records},indent=2))
