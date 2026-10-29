@@ -1,2 +1,0 @@
-baseline .01 .00005 baseline-lr-small checked
-baseline .01 .005 baseline-lr-large checked

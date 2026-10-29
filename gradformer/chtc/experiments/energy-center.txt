@@ -1,1 +1,0 @@
-sgd .01 .0005 center full

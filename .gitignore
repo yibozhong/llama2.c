@@ -1,12 +1,11 @@
 
-# Gradformer runtime artifacts and local authentication
+# Local environments, research outputs, and authentication
 .venv/
+__pycache__/
+*.py[cod]
 wandb/
 results/
 outputs/
+.env
 .netrc
 *.token
-gradformer/source.json
-
-__pycache__/
-*.py[cod]

@@ -2,18 +2,18 @@ version = 1
 revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 conflicts = [[
-    { package = "llama2c-gradformer", extra = "cpu" },
-    { package = "llama2c-gradformer", extra = "gpu" },
+    { package = "llama2c", extra = "cpu" },
+    { package = "llama2c", extra = "gpu" },
 ]]
 
 [[package]]
@@ -204,10 +204,10 @@ name = "contourpy"
 version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" } },
@@ -292,10 +292,10 @@ name = "contourpy"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 dependencies = [
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" } },
@@ -371,18 +371,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d8/b8/bb129f524210c5d3eb8616876e02af280fba8b5554e0ac1afad80b51e06b/contourpy-1.4.0-cp315-cp315t-win32.whl", hash = "sha256:90feb8da006803a95ba573fddc9536357d0c3faddc3a4c9e22816ca49af52878", size = 371854, upload-time = "2026-09-11T19:04:48.106Z" },
     { url = "https://files.pythonhosted.org/packages/d8/b1/bc774d9d200cfc4f073bba78b1bb1cb3b55bf1c8c345eae41fc2db510459/contourpy-1.4.0-cp315-cp315t-win_amd64.whl", hash = "sha256:de503609fdb71f597634ca64fb4bd2f13d27c97f140e912b1e8ed93544840df0", size = 262450, upload-time = "2026-09-11T19:04:49.502Z" },
     { url = "https://files.pythonhosted.org/packages/54/bf/eb4ff492e1c3d027617b5a20e4e6d63a035b41b8cf77a95950159556a3a5/contourpy-1.4.0-cp315-cp315t-win_arm64.whl", hash = "sha256:78ed5c5f962b3e156109f0531b174a65ba80d13cc681a70227b12524c162e184", size = 587064, upload-time = "2026-09-11T19:04:51.148Z" },
-]
-
-[[package]]
-name = "cut-cross-entropy"
-version = "25.9.3"
-source = { git = "https://github.com/apple-aiml-research/ml-cross-entropy.git?rev=3de376c106a1916bc5e1b619f9c77c87a461ee1c#3de376c106a1916bc5e1b619f9c77c87a461ee1c" }
-dependencies = [
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "triton", marker = "sys_platform != 'darwin'" },
 ]
 
 [[package]]
@@ -669,7 +657,7 @@ wheels = [
 ]
 
 [[package]]
-name = "llama2c-gradformer"
+name = "llama2c"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -677,18 +665,18 @@ dependencies = [
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "requests" },
     { name = "sentencepiece" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-7-llama2c-gpu'" },
     { name = "tqdm" },
     { name = "wandb" },
 ]
 
 [package.optional-dependencies]
 cpu = [
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
 ]
 gpu = [
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
@@ -699,9 +687,6 @@ dev = [
     { name = "matplotlib" },
     { name = "pytest" },
 ]
-local-ce = [
-    { name = "cut-cross-entropy" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -709,8 +694,8 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32" },
     { name = "sentencepiece", specifier = "==0.2.1" },
     { name = "torch", specifier = "==2.9.1" },
-    { name = "torch", marker = "extra == 'cpu'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "llama2c-gradformer", extra = "cpu" } },
-    { name = "torch", marker = "extra == 'gpu'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "llama2c-gradformer", extra = "gpu" } },
+    { name = "torch", marker = "extra == 'cpu'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "llama2c", extra = "cpu" } },
+    { name = "torch", marker = "extra == 'gpu'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "llama2c", extra = "gpu" } },
     { name = "tqdm", specifier = ">=4.67" },
     { name = "wandb", specifier = "==0.26.1" },
 ]
@@ -721,7 +706,6 @@ dev = [
     { name = "matplotlib", specifier = "==3.10.7" },
     { name = "pytest", specifier = "==8.4.2" },
 ]
-local-ce = [{ name = "cut-cross-entropy", git = "https://github.com/apple-aiml-research/ml-cross-entropy.git?rev=3de376c106a1916bc5e1b619f9c77c87a461ee1c" }]
 
 [[package]]
 name = "markupsafe"
@@ -931,10 +915,10 @@ name = "networkx"
 version = "3.6.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6a/51/63fe664f3908c97be9d2e4f1158eb633317598cfa6e1fc14af5383f17512/networkx-3.6.1.tar.gz", hash = "sha256:26b7c357accc0c8cde558ad486283728b65b6a95d85ee1cd66bafab4c8168509", size = 2517025, upload-time = "2025-12-08T17:02:39.908Z" }
 wheels = [
@@ -946,10 +930,10 @@ name = "networkx"
 version = "3.7"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/dc/76/3af777226b63a5e64a6b36b1ec5855c14e2b94a37096d4760e595fc43511/networkx-3.7.tar.gz", hash = "sha256:fd77a511bd90f39f3d016351345b52cf5319b813bdca01de3f755d3cca62e96a", size = 1866482, upload-time = "2026-09-21T16:45:16.974Z" }
 wheels = [
@@ -961,10 +945,10 @@ name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
 wheels = [
@@ -1046,10 +1030,10 @@ name = "numpy"
 version = "2.5.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
-    "python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
+    "python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/b0/c7453d0b6e2073c3264468b106ee1563750cecc910965e67357e3698c83e/numpy-2.5.4.tar.gz", hash = "sha256:9a94cf751c9ad8ebaa835bcd3d40dacf8534ad086b88c38029b65123c7999d2a", size = 20866315, upload-time = "2026-10-10T20:05:31.422Z" }
 wheels = [
@@ -1165,7 +1149,7 @@ name = "nvidia-cudnn-cu12"
 version = "9.10.2.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "nvidia-cublas-cu12" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fa/41/e79269ce215c857c935fd86bcfe91a451a584dfc27f1e068f568b9ad1ab7/nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:c9132cc3f8958447b4910a1720036d9eff5928cc3179b0a51fb6d167c6cc87d8", size = 705026878, upload-time = "2025-06-06T21:52:51.348Z" },
@@ -1178,7 +1162,7 @@ name = "nvidia-cufft-cu12"
 version = "11.3.3.83"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "nvidia-nvjitlink-cu12" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/bc/7771846d3a0272026c416fbb7e5f4c1f146d6d80704534d0b187dd6f4800/nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:848ef7224d6305cdb2a4df928759dca7b1201874787083b6e7550dd6765ce69a", size = 193109211, upload-time = "2025-03-07T01:44:56.873Z" },
@@ -1210,9 +1194,9 @@ name = "nvidia-cusolver-cu12"
 version = "11.7.3.90"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "nvidia-cusparse-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "nvidia-nvjitlink-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "nvidia-cublas-cu12" },
+    { name = "nvidia-cusparse-cu12" },
+    { name = "nvidia-nvjitlink-cu12" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/32/f7cd6ce8a7690544d084ea21c26e910a97e077c9b7f07bf5de623ee19981/nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:db9ed69dbef9715071232caa9b69c52ac7de3a95773c2db65bdba85916e4e5c0", size = 267229841, upload-time = "2025-03-07T01:46:54.356Z" },
@@ -1225,7 +1209,7 @@ name = "nvidia-cusparse-cu12"
 version = "12.5.8.93"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "extra != 'extra-18-llama2c-gradformer-cpu' or extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "nvidia-nvjitlink-cu12" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/f7/cd777c4109681367721b00a106f491e0d0d15cfa1fd59672ce580ce42a97/nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:9b6c161cb130be1a07a27ea6923df8141f3c295852f4b260c65f18f3e0a091dc", size = 288117129, upload-time = "2025-03-07T01:47:40.407Z" },
@@ -1795,14 +1779,14 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
+    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1-cp311-none-macosx_11_0_arm64.whl", hash = "sha256:a52952a8c90a422c14627ea99b9826b7557203b46b4d0772d3ca5c7699692425", upload-time = "2026-01-23T15:12:43Z" },
@@ -1822,30 +1806,30 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "fsspec", marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "jinja2", marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cublas-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-cupti-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-nvrtc-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-runtime-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cudnn-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cufft-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cufile-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-curand-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusolver-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusparse-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusparselt-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nccl-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvshmem-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvtx-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "sympy", marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "triton", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "typing-extensions", marker = "(extra != 'extra-18-llama2c-gradformer-cpu' and extra != 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
+    { name = "filelock", marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "fsspec", marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "jinja2", marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cublas-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-cupti-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-nvrtc-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-runtime-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cudnn-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cufft-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cufile-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-curand-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusolver-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusparse-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusparselt-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nccl-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvshmem-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvtx-cu12", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "sympy", marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "triton", marker = "(platform_machine == 'x86_64' and sys_platform == 'linux' and extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "typing-extensions", marker = "(extra != 'extra-7-llama2c-cpu' and extra != 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/15/db/c064112ac0089af3d2f7a2b5bfbabf4aa407a78b74f87889e524b91c5402/torch-2.9.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:62b3fd888277946918cba4478cf849303da5359f0fb4e3bfb86b0533ba2eaf8d", size = 104220430, upload-time = "2025-11-12T15:20:31.705Z" },
@@ -1883,14 +1867,14 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-18-llama2c-gradformer-cpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
+    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-7-llama2c-cpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:0e611cfb16724e62252b67d31073bc5c490cb83e92ecdc1192762535e0e44487", upload-time = "2026-01-23T15:12:54Z" },
@@ -1925,30 +1909,30 @@ resolution-markers = [
     "python_full_version < '3.12'",
 ]
 dependencies = [
-    { name = "filelock", marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "fsspec", marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "jinja2", marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cublas-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-cupti-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-nvrtc-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cuda-runtime-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cudnn-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cufft-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cufile-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-curand-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusolver-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusparse-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-cusparselt-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nccl-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvshmem-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "nvidia-nvtx-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "sympy", marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
-    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'extra-18-llama2c-gradformer-gpu') or (extra == 'extra-18-llama2c-gradformer-cpu' and extra == 'extra-18-llama2c-gradformer-gpu')" },
-    { name = "typing-extensions", marker = "extra == 'extra-18-llama2c-gradformer-gpu'" },
+    { name = "filelock", marker = "extra == 'extra-7-llama2c-gpu'" },
+    { name = "fsspec", marker = "extra == 'extra-7-llama2c-gpu'" },
+    { name = "jinja2", marker = "extra == 'extra-7-llama2c-gpu'" },
+    { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.12' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "networkx", version = "3.7", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.12' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cublas-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-cupti-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-nvrtc-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cuda-runtime-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cudnn-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cufft-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cufile-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-curand-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusolver-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusparse-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-cusparselt-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nccl-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvshmem-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "nvidia-nvtx-cu12", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "sympy", marker = "extra == 'extra-7-llama2c-gpu'" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'extra-7-llama2c-gpu') or (extra == 'extra-7-llama2c-cpu' and extra == 'extra-7-llama2c-gpu')" },
+    { name = "typing-extensions", marker = "extra == 'extra-7-llama2c-gpu'" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cu128/torch-2.9.1%2Bcu128-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:cf4ad82430824a80a9f398e29369524ed26c152cf00c2c12002e5400b35e260d", upload-time = "2026-01-26T16:53:53Z" },
